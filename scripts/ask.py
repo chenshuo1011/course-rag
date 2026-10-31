@@ -56,7 +56,10 @@ def main():
         if q.lower() in ("exit", "quit", "退出"):
             break
 
-        vs = (embed([QUERY_INSTRUCTION + q]) @ vecs.T).numpy()[0]
+        # 先转成 numpy 再做矩阵乘：
+        # 直接把 numpy 数组和 torch 张量相乘，numpy 2.0 会报 DeprecationWarning
+        qv = embed([QUERY_INSTRUCTION + q]).numpy()[0]
+        vs = vecs @ qv
         bs = bm.scores(q)
         score = W_VEC * minmax(vs) + (1 - W_VEC) * minmax(bs)
         order = np.argsort(-score)[:TOP_K]

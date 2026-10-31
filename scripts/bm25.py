@@ -16,11 +16,15 @@ BM25 检索（自己实现，不依赖 rank_bm25）
   b      = 长度惩罚强度（长文档天然容易命中，要罚）
 """
 
+import logging
 import re
 from collections import Counter
 
 import jieba
 import numpy as np
+
+# jieba 首次加载会往 stderr 打四行"Building prefix dict..."，压到 ERROR 级别
+jieba.setLogLevel(logging.ERROR)
 
 _STOP = set(
     "的 了 是 在 和 与 或 及 等 这 那 其 之 也 都 就 而 以 于 对 从 为 被 把 有 不 "

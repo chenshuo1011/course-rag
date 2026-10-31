@@ -17,6 +17,15 @@ os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
+# 屏蔽底层 C++ 库的启动日志。
+# 这些不是错误，只是"我用了一个加速库、浮点结果可能有极小差异"的提示，
+# 但在命令行里会刷掉一屏，掩盖真正的输出。
+# USE_TF=0 是关键：transformers 默认会尝试导入 TensorFlow，
+# 而本项目只用 PyTorch，根本不需要它——不导入就不会有那些日志。
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+os.environ.setdefault("GLOG_minloglevel", "3")
+
 import torch
 from transformers import AutoTokenizer, AutoModel
 
