@@ -1,0 +1,20 @@
+{
+  "baseline": {
+    "tag": "A 原查询（基线）",
+    "hit@1_strict": 0.4666666666666667,
+    "hit@3_strict": 0.74,
+    "hit@5_strict": 0.8,
+    "hit@1_group": 0.68,
+    "hit@3_group": 0.7866666666666666,
+    "hit@5_group": 0.84
+  },
+  "rewrite": {
+    "tag": "B LLM 改写",
+    "hit@1_strict": 0.43333333333333335,
+    "hit@3_strict": 0.7066666666666667,
+    "hit@5_strict": 0.78,
+    "hit@1_group": 0.64,
+    "hit@3_group": 0.7533333333333333,
+    "hit@5_group": 0.82
+  }
+}

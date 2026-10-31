@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.idea/
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# 模型缓存（首次运行会自动下载）
+models/
+.cache/
+hf_cache/
