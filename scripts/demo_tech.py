@@ -21,7 +21,7 @@ from embedder import embed
 ROOT = Path(__file__).parent.parent
 DATA = ROOT / "data"
 
-SENTS = ["系统有啥特点", "系统有哪些特征", "红烧肉的做法"]
+SENTS = ["系统有啥特点", "系统", "红烧肉的做法"]
 
 
 def main():
