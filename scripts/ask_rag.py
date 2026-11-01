@@ -31,6 +31,9 @@ DATA = ROOT / "data"
 TOP_K = 3
 W_VEC = 0.5
 
+# 解析现在直接存在 index_meta.json 里（build_index_v2.py 写入）
+
+
 SYSTEM = (
     "你是课程答疑助手。你只能依据给定的题目和答案回答，"
     "绝不补充题目里没有的信息。"
@@ -43,21 +46,23 @@ TEMPLATE = """下面是题库里检索到的几道题：
 学生的问题：{query}
 
 请按以下要求回答：
-1. 如果上面有题目能回答这个问题，就基于它的答案，用学生听得懂的口语解释，120 字以内
+1. 如果上面有题目能回答这个问题，就综合它的答案和解析，用学生听得懂的口语解释，120 字以内
 2. 如果上面的题目都答不了这个问题，只输出这七个字：题库里没有找到
 3. 不要说"根据第几题"之类的过渡语，直接给答案
 4. 不要编造题目里没有的内容
 
-关于判断题的说明：题型标为"判断题"的题目，**题干本身就是一条知识陈述**，
-答案里的"正确/错误"只是判断这条陈述是否成立。
-你可以从题干里提取知识来回答问题，但要说明该说法是否成立；
-如果几道判断题互相矛盾，以成立的那条为准。"""
+关于题目格式的说明：
+- 判断题的"答案"是"正确/错误"，真正的知识在**解析**里——解析说明了该说法错在哪、正确表述是什么。
+- 选择题的"答案"是选项内容，解析说明了为什么选它、其他为什么不选。
+- 如果几道题的说法互相矛盾，以被判定为"正确"的那条、或解析给出的完整表述为准。"""
 
 
 def doc_text(m):
     parts = [m["stem"]]
     if m.get("options"):
         parts.extend(f"{k}. {v}" for k, v in m["options"].items())
+    if m.get("explanation"):
+        parts.append(m["explanation"])
     return " ".join(parts)
 
 
@@ -69,6 +74,8 @@ def build_context(hits):
             opts = "；".join(f"{k}. {v}" for k, v in m["options"].items())
             lines.append(f"选项：{opts}")
         lines.append(f"答案：{m['answer_text'] or m['answer']}")
+        if m.get("explanation"):
+            lines.append(f"解析：{m['explanation']}")
         lines.append("")
     return "\n".join(lines)
 

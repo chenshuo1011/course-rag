@@ -29,6 +29,8 @@ def doc_text(m):
     parts = [m["stem"]]
     if m.get("options"):
         parts.extend(f"{k}. {v}" for k, v in m["options"].items())
+    if m.get("explanation"):
+        parts.append(m["explanation"])
     return " ".join(parts)
 
 
