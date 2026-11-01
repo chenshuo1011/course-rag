@@ -71,8 +71,7 @@
 | `scripts/bm25.py` | 手写 BM25 实现，无第三方依赖 |
 | `scripts/embedder.py` | bge-small-zh-v1.5 封装，走 hf-mirror 镜像 |
 | `scripts/run_eval.py` | 读评测工作台，跑评测出分数 |
-| `scripts/ask.py` | 命令行问答演示（只返回题目和答案） |
-| `scripts/ask_rag.py` | 带生成的问答：检索 → 大模型组织答案 → 拒答 |
+| `scripts/ask.py` | **统一入口**：检索 → 生成 → 拒答（`--no-gen` 只看检索） |
 | `scripts/probe_threshold.py` | 探针：验证"相似度能不能当置信度" |
 | `scripts/demo_tech.py` | 用真实数字拆解 embedding / 余弦 / BM25 / 归一化 |
 | `scripts/exp_rewrite.py` | 实验 1：口语→书面改写 |
@@ -118,9 +117,10 @@ python scripts/ask.py
 
 ---
 
-## 加生成之后（`ask_rag.py`）
+## 加生成之后（`ask.py`）
 
-在检索之上接一层大模型，把 top-3 的题目和答案交给它组织成口语回答，同时要求它**答不出来就拒答**。
+默认流程：混合检索 top-3 → 把题目、答案、**解析**交给大模型 → 口语回答，**答不出就拒答**。
+加 `--no-gen` 只做检索，用来单独观察检索环节。
 
 **为什么要加拒答**：检索永远会返回 top-3，哪怕库里根本没有相关内容。直接把错题喂给模型，它会照着编出一段通顺但完全错误的回答——这比答不出来危险得多。
 

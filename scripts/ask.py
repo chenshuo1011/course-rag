@@ -1,31 +1,64 @@
 """
-命令行问答演示：随便用大白话问，看系统找到哪道题、答案是什么
+课程题库答疑 —— 统一入口
 
-用的是评测里表现最好的配置：向量 0.5 + BM25 0.5
+默认流程：提问 → 混合检索 top-3 → 把题目、答案、解析交给大模型 → 口语回答
+加参数 --no-gen 则只做检索，不调大模型（用来观察"检索"这一步本身的效果）
 
-运行（在 D:/course-rag/scripts 目录下）：
-    "D:/anaconda3/envs/yolo/python.exe" ask.py
+    "D:/anaconda3/envs/yolo/python.exe" ask.py            # 检索 + 生成
+    "D:/anaconda3/envs/yolo/python.exe" ask.py --no-gen    # 只检索
 
-输入 exit 退出。
+为什么要有拒答：
+  检索永远会返回 top-3，哪怕库里根本没有相关内容。把这些题直接喂给模型，
+  它会照着编一段通顺但完全错误的话——比答不出来危险得多。
+  所以要求模型：答不了就输出"题库里没有找到"。
+
+为什么不用相似度阈值做拒答：
+  实测（probe_threshold.py）"检索对了"和"检索错了"的 top-1 相似度分布
+  完全重叠（0.5~0.79），分不开。只能让模型自己判断相关性。
 """
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 
 from bm25 import BM25, minmax
 from embedder import QUERY_INSTRUCTION, embed
+from llm import chat
 
 ROOT = Path(__file__).parent.parent
 DATA = ROOT / "data"
 TOP_K = 3
 W_VEC = 0.5
 
-TYPE_CN = {"single": "单选题", "multi": "多选题", "judge": "判断题"}
+WITH_GEN = "--no-gen" not in sys.argv
+
+SYSTEM = (
+    "你是课程答疑助手。你只能依据给定的题目、答案和解析回答，"
+    "绝不补充材料里没有的信息。"
+)
+
+TEMPLATE = """下面是题库里检索到的几道题：
+
+{context}
+
+学生的问题：{query}
+
+请按以下要求回答：
+1. 如果上面有题目能回答这个问题，就综合它的答案和解析，用学生听得懂的口语解释，120 字以内
+2. 如果上面的题目都答不了这个问题，只输出这七个字：题库里没有找到
+3. 不要说"根据第几题"之类的过渡语，直接给答案
+4. 不要编造材料里没有的内容
+
+关于题目格式的说明：
+- 判断题的"答案"是"正确/错误"，真正的知识在**解析**里——解析说明了该说法错在哪、正确表述是什么。
+- 选择题的"答案"是选项内容，解析说明了为什么选它、其他为什么不选。
+- 如果几道题的说法互相矛盾，以被判定为"正确"的那条、或解析给出的完整表述为准。"""
 
 
 def doc_text(m):
+    """和建索引时保持完全一致，否则向量与 BM25 两路输入不对等"""
     parts = [m["stem"]]
     if m.get("options"):
         parts.extend(f"{k}. {v}" for k, v in m["options"].items())
@@ -34,17 +67,29 @@ def doc_text(m):
     return " ".join(parts)
 
 
+def build_context(hits):
+    lines = []
+    for i, m in enumerate(hits, 1):
+        lines.append(f"【题{i}】{m['stem']}")
+        if m.get("options"):
+            lines.append("选项：" + "；".join(f"{k}. {v}" for k, v in m["options"].items()))
+        lines.append(f"答案：{m['answer_text'] or m['answer']}")
+        if m.get("explanation"):
+            lines.append(f"解析：{m['explanation']}")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def main():
     meta = json.loads((DATA / "index_meta.json").read_text(encoding="utf-8"))
     vecs = np.load(DATA / "vectors.npy")
     print("加载索引与 BM25 ...")
     bm = BM25([doc_text(m) for m in meta])
-    print(f"就绪：{len(meta)} 道题\n")
+    print(f"就绪：{len(meta)} 道题 | 模式：{'检索 + 生成' if WITH_GEN else '仅检索'}")
 
-    print("=" * 62)
-    print("自然辩证法 题库答疑（随便用大白话问）")
-    print("输入 exit 退出")
-    print("=" * 62)
+    print("=" * 64)
+    print("课程题库答疑    输入 exit 退出")
+    print("=" * 64)
     print()
 
     while True:
@@ -58,22 +103,30 @@ def main():
         if q.lower() in ("exit", "quit", "退出"):
             break
 
-        # 先转成 numpy 再做矩阵乘：
-        # 直接把 numpy 数组和 torch 张量相乘，numpy 2.0 会报 DeprecationWarning
         qv = embed([QUERY_INSTRUCTION + q]).numpy()[0]
         vs = vecs @ qv
         bs = bm.scores(q)
-        score = W_VEC * minmax(vs) + (1 - W_VEC) * minmax(bs)
-        order = np.argsort(-score)[:TOP_K]
+        combined = W_VEC * minmax(vs) + (1 - W_VEC) * minmax(bs)
+        order = np.argsort(-combined)[:TOP_K]
+        hits = [meta[int(i)] for i in order]
 
         print()
-        for rank, i in enumerate(order, 1):
-            m = meta[int(i)]
-            print(f"  {rank}. [{TYPE_CN.get(m['type'], m['type'])}] {m['stem'][:52]}")
-            ans = m["answer_text"] or m["answer"]
-            print(f"     答案：{str(ans)[:60]}")
-            mark = "★" if rank == 1 and score[i] > 0.55 else " "
-            print(f"     {mark} 相似度 {vs[i]:.3f} | BM25 {bs[i]:.2f} | 综合 {score[i]:.3f}")
+        print("── 检索到的题 " + "─" * 48)
+        for i, (m, idx) in enumerate(zip(hits, order), 1):
+            print(f"  {i}. {m['stem'][:46]}")
+            print(f"     相似度 {vs[idx]:.3f} | 答案：{str(m['answer_text'] or m['answer'])[:34]}")
+
+        print()
+        print("── 回答 " + "─" * 54)
+        if WITH_GEN:
+            try:
+                print("  " + chat(SYSTEM, TEMPLATE.format(context=build_context(hits), query=q),
+                                  max_tokens=300))
+            except Exception as e:
+                print(f"  调用大模型失败：{e}")
+                print("  （上面的检索结果仍然可用）")
+        else:
+            print("  （--no-gen 模式，只显示检索结果）")
         print()
 
 
