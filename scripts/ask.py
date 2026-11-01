@@ -46,10 +46,12 @@ TEMPLATE = """下面是题库里检索到的几道题：
 学生的问题：{query}
 
 请按以下要求回答：
-1. 如果上面有题目能回答这个问题，就综合它的答案和解析，用学生听得懂的口语解释，120 字以内
-2. 如果上面的题目都答不了这个问题，只输出这七个字：题库里没有找到
-3. 不要说"根据第几题"之类的过渡语，直接给答案
-4. 不要编造材料里没有的内容
+1. 如果材料能直接回答这个问题，就综合答案和解析，用学生听得懂的口语解释，120 字以内
+2. 如果材料只能回答问题的一部分，就说明材料里确定的那部分，并明确指出"题库里没讲到"的是什么
+   （例如：材料讲了阿拉伯人保存古希腊文献，但没专门谈哲学——这种情况也要答，不要拒答）
+3. 只有当材料与问题完全没有关系时，才输出这七个字：题库里没有找到
+4. 不要说"根据第几题"之类的过渡语，直接回答
+5. 不要编造材料里没有的内容
 
 关于题目格式的说明：
 - 判断题的"答案"是"正确/错误"，真正的知识在**解析**里——解析说明了该说法错在哪、正确表述是什么。
@@ -107,8 +109,26 @@ def main():
         vs = vecs @ qv
         bs = bm.scores(q)
         combined = W_VEC * minmax(vs) + (1 - W_VEC) * minmax(bs)
-        order = np.argsort(-combined)[:TOP_K]
-        hits = [meta[int(i)] for i in order]
+
+        # 按题干去重：题库里有 6 道题题干完全相同（multi-第四讲-2~7），
+        # 不去重的话它们会占满 top-3，把别的候选挤掉。
+        # 只比题干，不比选项/解析——它们选项不同但问的是同一件事。
+        import re as _re
+        def stem_key(m):
+            return _re.sub(r"[\s　（）()、，。？,.:：\"'']", "", m["stem"])
+
+        order, seen = [], set()
+        for i in np.argsort(-combined):
+            m = meta[int(i)]
+            key = stem_key(m)
+            if key in seen:
+                continue
+            seen.add(key)
+            order.append(int(i))
+            if len(order) >= TOP_K:
+                break
+        order = np.array(order)
+        hits = [meta[i] for i in order]
 
         print()
         print("── 检索到的题 " + "─" * 48)
