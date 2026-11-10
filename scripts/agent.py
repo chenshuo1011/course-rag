@@ -39,7 +39,7 @@ from llm import LAST_USAGE, chat_msgs
 ROOT = Path(__file__).parent.parent
 DATA = ROOT / "data"
 W_VEC = 0.5
-MAX_STEPS = 6
+MAX_STEPS = 8
 
 # ─────────────────────────── 题库索引 ───────────────────────────
 
@@ -51,6 +51,21 @@ def doc_text(m):
     if m.get("explanation"):
         parts.append(m["explanation"])
     return " ".join(parts)
+
+
+# 题库里有 1 道判断题的答案写成"否"（judge-第四讲-8），其余 170 道用"正确/错误"。
+# 直接按字符串过滤会把它漏掉，所以统一归一化。
+_ANSWER_MAP = {
+    "正确": "正确", "对": "正确", "是": "正确", "√": "正确", "true": "正确", "t": "正确",
+    "错误": "错误", "错": "错误", "否": "错误", "×": "错误", "false": "错误", "f": "错误",
+}
+
+
+def _norm_answer(a) -> str:
+    if a is None:
+        return ""
+    s = str(a).strip()
+    return _ANSWER_MAP.get(s, _ANSWER_MAP.get(s.lower(), ""))
 
 
 class KB:
@@ -102,20 +117,28 @@ class KB:
             "explanation": m.get("explanation") or "（题库没有给解析）",
         }
 
-    def stats(self, lecture: str = "", type: str = "") -> dict:
+    def stats(self, lecture: str = "", type: str = "", answer: str = "") -> dict:
         rows = self.meta
         if lecture:
             rows = [m for m in rows if lecture in m["lecture"]]
         if type:
             rows = [m for m in rows if m["type"] == type]
-        by_type, by_lecture = {}, {}
+        if answer:
+            want = _norm_answer(answer)
+            if not want:
+                return {"error": f"answer 只能是 正确/错误（或 对/错/是/否），收到：{answer}"}
+            rows = [m for m in rows if _norm_answer(m.get("answer")) == want]
+        by_type, by_lecture, by_answer = {}, {}, {}
         for m in rows:
             by_type[m["type"]] = by_type.get(m["type"], 0) + 1
             by_lecture[m["lecture"]] = by_lecture.get(m["lecture"], 0) + 1
+            a = _norm_answer(m.get("answer")) or "其他"
+            by_answer[a] = by_answer.get(a, 0) + 1
         return {
             "count": len(rows),
             "by_type": dict(sorted(by_type.items())),
             "by_lecture": dict(sorted(by_lecture.items())),
+            "by_answer": by_answer,
             "sample_ids": [m["id"] for m in rows[:5]],
         }
 
@@ -180,8 +203,13 @@ TOOLS = {
         "args": {"qid": "题号，如 single-第一讲-3"},
     },
     "stats": {
-        "desc": "统计题库。可按讲次和题型过滤，返回数量、题型分布、讲次分布。",
-        "args": {"lecture": "讲次，如 第三讲；空表示全部", "type": "题型：single/multi/judge；空表示全部"},
+        "desc": "统计题库。可按讲次、题型、答案过滤，返回数量、题型/讲次/答案分布。"
+                "问「有几道判断题答案是错的」「某讲有多少道错题」必须用这个。",
+        "args": {
+            "lecture": "讲次，如 第三讲；空表示全部",
+            "type": "题型：single/multi/judge；空表示全部",
+            "answer": "答案：正确/错误（也接受 对/错/是/否）；空表示全部。判断题的答案就是正确或错误",
+        },
     },
     "grep": {
         "desc": "全库逐题扫描关键词，返回全部命中：总数、按讲次分布、每道题的题号与题干。"
@@ -211,6 +239,8 @@ SYSTEM = """你是课程答疑 Agent，能调用工具查题库。
 1. 不确定题库里有没有相关内容时，先 search，不要凭空回答。
 2. 需要看某题完整解析时，用 detail。
 3. 问数量、分布、第几讲有几道这类问题时，用 stats，不要靠 search 猜。
+   问「有几道判断题答案是错的」「这讲有多少道错题」用 stats(answer="错误")——
+   **不要靠 detail 逐题看**，题多的时候一定用完步数还看不完。
 4. 问「哪几讲提到某个词」「一共几道提到某个词」这类需要覆盖全库的问题，**必须用 grep**。
    search 只返回最相关的几条，不能当全集——用它数数量一定会漏。
    注意 scope：问「讲到/考到」用 scope=stem；问「选项里出现过」才用 all。

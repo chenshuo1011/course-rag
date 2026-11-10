@@ -69,7 +69,7 @@ ITEMS = [
     # 没有"按答案筛选"这个维度，grep 又只能按关键词扫。
     # 实测它会诚实拒答"工具没法按答案统计"——比硬编强，但没解决问题。
     # 留着这两条，评测才有区分度：全是 15/15 的评测说明不了任何事。
-    ("h-6", "判断题里有几道答案是错误的", "stat", {"n": 86}),
+    ("h-6", "判断题里有几道答案是错误的", "stat", {"n": 87}),
     ("h-7", "第三讲有几道判断题答案是错的", "stat", {"n": 11}),
 ]
 
@@ -114,7 +114,10 @@ def raw_scan():
     out["_judge_gt_multi"] = {k for k, v in cross.items() if v["judge"] > v["multi"]}
     out["_third_single"] = cross["第三讲"]["single"]
     out["_fifth_single"] = cross["第五讲"]["single"]
-    wrong = [m for m in meta if m["type"] == "judge" and str(m.get("answer")) == "错误"]
+    # 题库有 1 道判断题答案写成"否"（judge-第四讲-8），不是"错误"。
+    # 语义上它也算错，所以这里归一化后再统计——直接比字符串会少算 1 道。
+    wrong = [m for m in meta if m["type"] == "judge"
+             and str(m.get("answer")).strip() in ("错误", "否", "错")]
     out["_judge_wrong"] = len(wrong)
     lw = {}
     for m in wrong:
@@ -155,8 +158,8 @@ def check_ground_truth(scan):
         bad.append(f"未提牛顿：写死 4 讲，实扫 {sorted(scan['_no_newton'])}")
     if scan["_third_single"] <= scan["_fifth_single"]:
         bad.append(f"第三讲单选题 {scan['_third_single']} 并不多于第五讲 {scan['_fifth_single']}")
-    if scan["_judge_wrong"] != 86:
-        bad.append(f"判断题答案=错误：写死 86，实扫 {scan['_judge_wrong']}")
+    if scan["_judge_wrong"] != 87:
+        bad.append(f"判断题答案=错误：写死 87，实扫 {scan['_judge_wrong']}")
     if scan["_judge_wrong_lecture"]["第三讲"] != 11:
         bad.append(f"第三讲判断题答案=错误：写死 11，实扫 {scan['_judge_wrong_lecture']['第三讲']}")
     return bad
