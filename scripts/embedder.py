@@ -17,6 +17,18 @@ os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
+# 只用本地缓存，不联网。
+#
+# 为什么必须这样：
+#   from_pretrained 默认会先去镜像站发一个 HEAD 请求，检查"有没有新版本"，
+#   哪怕模型 95MB 早就下完了。这个请求会走系统的 HTTP_PROXY，
+#   而科学上网工具一关端口就变，于是每次启动都报
+#   ProxyError / WinError 10061，连模型都加载不起来。
+#
+#   模型文件在 ~/.cache/huggingface/hub 里是完整的，根本不需要那次校验。
+#   想重新下载或换模型时，设 BGE_ALLOW_DOWNLOAD=1 即可恢复联网行为。
+_LOCAL_ONLY = os.environ.get("BGE_ALLOW_DOWNLOAD") != "1"
+
 # 屏蔽底层 C++ 库的启动日志。
 # 这些不是错误，只是"我用了一个加速库、浮点结果可能有极小差异"的提示，
 # 但在命令行里会刷掉一屏，掩盖真正的输出。
@@ -41,8 +53,16 @@ _model = None
 def _lazy_load():
     global _tokenizer, _model
     if _model is None:
-        _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        _model = AutoModel.from_pretrained(MODEL_NAME)
+        kw = {"local_files_only": _LOCAL_ONLY}
+        try:
+            _tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, **kw)
+            _model = AutoModel.from_pretrained(MODEL_NAME, **kw)
+        except OSError as e:
+            raise RuntimeError(
+                f"本地缓存里找不到模型 {MODEL_NAME}。\n"
+                f"先把代理关掉，再设 BGE_ALLOW_DOWNLOAD=1 重新跑一次，让它下载。\n"
+                f"原始错误：{e}"
+            ) from None
         _model.eval()
     return _tokenizer, _model
 
