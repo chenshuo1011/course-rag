@@ -119,6 +119,54 @@ class KB:
             "sample_ids": [m["id"] for m in rows[:5]],
         }
 
+    def grep(self, keyword: str, scope: str = "stem", limit: int = 15) -> dict:
+        """全库逐题扫关键词，返回全部命中。
+
+        为什么需要它：
+          search 返回的是"语义最相关的 top-k"，不是"含这个词的全部"。
+          问"哪几讲提到盖伦"这类需要覆盖全库的问题，用 search 数数量必然出错
+          （实测：会漏讲次，也会把天文学相关但没提盖伦的题算进来）。
+
+        为什么要有 scope：
+          同一个词有两种"出现"。
+            stem —— 题干+解析里讲了它，等于"这道题考它"。问"哪几讲讲到了X"要这个。
+            all  —— 连选项一起算。选项里常把名人列成干扰项，比如
+                    「天空立法者是（ ）」的选项里有"第谷"，但那道题考的是开普勒。
+          实测「第谷」：scope=stem 是 5 道，scope=all 是 8 道。混用就会答错数量。
+        """
+        kw = (keyword or "").strip()
+        if not kw:
+            return {"error": "keyword 不能为空"}
+
+        def text_of(m):
+            if scope == "all":
+                return doc_text(m)
+            base = [m["stem"]]
+            if m.get("explanation"):
+                base.append(m["explanation"])
+            return " ".join(base)
+
+        rows = [m for m in self.meta if kw in text_of(m)]
+        by_lecture = {}
+        for m in rows:
+            by_lecture[m["lecture"]] = by_lecture.get(m["lecture"], 0) + 1
+        return {
+            "keyword": kw,
+            "scope": "含选项" if scope == "all" else "题干+解析",
+            "total": len(rows),
+            "by_lecture": dict(sorted(by_lecture.items())),
+            "truncated": len(rows) > limit,
+            "hits": [
+                {
+                    "qid": m["id"],
+                    "lecture": m["lecture"],
+                    "type": m["type"],
+                    "stem": m["stem"][:70],
+                }
+                for m in rows[:limit]
+            ],
+        }
+
 
 # ─────────────────────────── 工具清单 ───────────────────────────
 
@@ -134,6 +182,15 @@ TOOLS = {
     "stats": {
         "desc": "统计题库。可按讲次和题型过滤，返回数量、题型分布、讲次分布。",
         "args": {"lecture": "讲次，如 第三讲；空表示全部", "type": "题型：single/multi/judge；空表示全部"},
+    },
+    "grep": {
+        "desc": "全库逐题扫描关键词，返回全部命中：总数、按讲次分布、每道题的题号与题干。"
+                "问「哪几讲提到X」「一共几道提到X」必须用这个，不能用 search 数数量。",
+        "args": {
+            "keyword": "要查的词，如 盖伦、第谷",
+            "scope": "stem=题干+解析（这道题考它）；all=连选项也算（选项里出现过）",
+            "limit": "最多返回几道题的明细，默认 15",
+        },
     },
 }
 
@@ -154,10 +211,16 @@ SYSTEM = """你是课程答疑 Agent，能调用工具查题库。
 1. 不确定题库里有没有相关内容时，先 search，不要凭空回答。
 2. 需要看某题完整解析时，用 detail。
 3. 问数量、分布、第几讲有几道这类问题时，用 stats，不要靠 search 猜。
-4. search 结果不足以回答就换一组词再查，但不要重复同样的查询。
-5. 题库里确实没有相关内容时，answer 写"题库里没有找到"，并说明查到的最接近的是什么。
-6. 回答只讲学生问的那一点，不要捎带无关信息。
-7. 判断题的"答案"是正确/错误，真正的知识在解析里。"""
+4. 问「哪几讲提到某个词」「一共几道提到某个词」这类需要覆盖全库的问题，**必须用 grep**。
+   search 只返回最相关的几条，不能当全集——用它数数量一定会漏。
+   注意 scope：问「讲到/考到」用 scope=stem；问「选项里出现过」才用 all。
+   选项里常把名人当干扰项，混用会把「考开普勒的题」也算成「提到第谷」。
+5. search 结果不足以回答就换一组词再查，但不要重复同样的查询。
+6. 逐条核对工具返回的每一道题，再下结论。**不要在看到几条命中后就断言"其他都没有"**——
+   只有 grep 的 total 才能支撑"一共几道"这种判断。
+7. 题库里确实没有相关内容时，answer 写"题库里没有找到"，并说明查到的最接近的是什么。
+8. 回答只讲学生问的那一点，不要捎带无关信息。
+9. 判断题的"答案"是正确/错误，真正的知识在解析里。"""
 
 
 def build_system() -> str:
@@ -284,6 +347,8 @@ def _brief(name: str, obs) -> str:
         return f"{obs['qid']} 答案={obs['answer'][:24]}"
     if name == "stats":
         return f"共 {obs['count']} 道，题型 {obs['by_type']}"
+    if name == "grep":
+        return f"共 {obs['total']} 条，讲次 {obs['by_lecture']}"
     return str(obs)[:60]
 
 
