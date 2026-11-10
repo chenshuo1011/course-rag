@@ -47,6 +47,30 @@ ITEMS = [
     ("cmp-1", "多选题比单选题多几道", "stat", {"n": 7}),
     ("qa-1", "第谷接受的是哪种学说", "qa", {"must": "地心说"}),
     ("ref-1", "红烧肉怎么做才好吃", "refuse", {}),
+
+    # ── 以下 5 条是"工具选对也可能答错"的题 ─────────────────────────
+    # 前面 10 条只要工具选对就必然对（grep 给总数、stats 给数量）。
+    # 这 5 条要模型自己做集合运算或交叉统计，现有 4 个工具都不直接支持。
+    # 这题试过三种判法，都不如人意：
+    #   ① forbid 其他讲次 → 误杀，正确答案会顺带说"第二讲只提到盖伦"
+    #   ② 要求出现"唯一/只有/重合" → 也误杀，模型换了个说法"第二讲只提到盖伦，没有牛顿"
+    # 语义等价的表述太多，词表法判不干净。所以只查"有没有说出第四讲"，宁可松一点，
+    # 结论靠人抽查兜底——这也说明自动判分不是万能的，有些题必须人工看。
+    ("h-1", "盖伦和牛顿有没有出现在同一讲里？是哪一讲", "qa", {"must": "第四讲"}),
+    ("h-2", "哪几讲的判断题比多选题多", "set",
+     {"must_all": ["第一讲", "第二讲", "第八讲"], "forbid": []}),
+    ("h-3", "哪几讲完全没有提到牛顿", "set",
+     {"must_all": ["第一讲", "第二讲", "第三讲", "第七讲"], "forbid": []}),
+    ("h-4", "第谷和开普勒是什么关系", "qa", {"must": "火星"}),
+    ("h-5", "第三讲和第五讲，哪讲的选择题更多", "qa", {"must": "第三讲"}),
+
+    # ── 以下 2 条是实测确认会失败的题 ───────────────────────────────
+    # 学生复习时最自然的问法之一，但 stats 只能按讲次/题型过滤，
+    # 没有"按答案筛选"这个维度，grep 又只能按关键词扫。
+    # 实测它会诚实拒答"工具没法按答案统计"——比硬编强，但没解决问题。
+    # 留着这两条，评测才有区分度：全是 15/15 的评测说明不了任何事。
+    ("h-6", "判断题里有几道答案是错误的", "stat", {"n": 86}),
+    ("h-7", "第三讲有几道判断题答案是错的", "stat", {"n": 11}),
 ]
 
 CN = {0: "零", 1: "一", 2: "二", 3: "三", 4: "四", 5: "五",
@@ -75,6 +99,28 @@ def raw_scan():
     out["_multi_minus_single"] = (
         sum(1 for m in meta if m["type"] == "multi") -
         sum(1 for m in meta if m["type"] == "single"))
+
+    def lecs(kw):
+        return {m["lecture"].replace("\u3000", " ").split()[0]
+                for m in meta if kw in text(m)}
+
+    all_lects = {m["lecture"].replace("\u3000", " ").split()[0] for m in meta}
+    out["_both_galan_newton"] = lecs("盖伦") & lecs("牛顿")
+    out["_no_newton"] = all_lects - lecs("牛顿")
+    cross = {}
+    for m in meta:
+        lec = m["lecture"].replace("\u3000", " ").split()[0]
+        cross.setdefault(lec, {"single": 0, "multi": 0, "judge": 0})[m["type"]] += 1
+    out["_judge_gt_multi"] = {k for k, v in cross.items() if v["judge"] > v["multi"]}
+    out["_third_single"] = cross["第三讲"]["single"]
+    out["_fifth_single"] = cross["第五讲"]["single"]
+    wrong = [m for m in meta if m["type"] == "judge" and str(m.get("answer")) == "错误"]
+    out["_judge_wrong"] = len(wrong)
+    lw = {}
+    for m in wrong:
+        lec = m["lecture"].replace("\u3000", " ").split()[0]
+        lw[lec] = lw.get(lec, 0) + 1
+    out["_judge_wrong_lecture"] = lw
     return out
 
 
@@ -99,6 +145,20 @@ def check_ground_truth(scan):
         bad.append(f"最多的一讲：写死 72，实扫 {n}")
     if scan["_multi_minus_single"] != 7:
         bad.append(f"多选-单选：写死 7，实扫 {scan['_multi_minus_single']}")
+
+    # 难题那 5 条也要用独立扫描核对，不能只在脑子里算过
+    if scan["_both_galan_newton"] != {"第四讲"}:
+        bad.append(f"盖伦∩牛顿：写死 ['第四讲']，实扫 {sorted(scan['_both_galan_newton'])}")
+    if scan["_judge_gt_multi"] != {"第一讲", "第二讲", "第八讲"}:
+        bad.append(f"判断>多选：写死 3 讲，实扫 {sorted(scan['_judge_gt_multi'])}")
+    if scan["_no_newton"] != {"第一讲", "第二讲", "第三讲", "第七讲"}:
+        bad.append(f"未提牛顿：写死 4 讲，实扫 {sorted(scan['_no_newton'])}")
+    if scan["_third_single"] <= scan["_fifth_single"]:
+        bad.append(f"第三讲单选题 {scan['_third_single']} 并不多于第五讲 {scan['_fifth_single']}")
+    if scan["_judge_wrong"] != 86:
+        bad.append(f"判断题答案=错误：写死 86，实扫 {scan['_judge_wrong']}")
+    if scan["_judge_wrong_lecture"]["第三讲"] != 11:
+        bad.append(f"第三讲判断题答案=错误：写死 11，实扫 {scan['_judge_wrong_lecture']['第三讲']}")
     return bad
 
 
@@ -151,6 +211,23 @@ def judge(kind: str, exp: dict, answer: str) -> tuple[bool, str]:
             return False, f"多讲了 {sorted(bad)}"
         return True, ""
 
+    if kind == "claim":
+        miss = [x for x in exp["must_all"] if x not in answer]
+        if miss:
+            return False, f"漏了 {miss}"
+        if not any(w in answer for w in exp["any_of"]):
+            return False, f"没有明确断言（缺少 {'/'.join(exp['any_of'])} 之类）"
+        return True, ""
+
+    if kind == "set":
+        miss = [x for x in exp["must_all"] if x not in answer]
+        if miss:
+            return False, f"漏了 {miss}"
+        forbid = [x for x in exp.get("forbid", []) if x in answer]
+        if forbid:
+            return False, f"多说了 {forbid}"
+        return True, ""
+
     return False, f"未知类型 {kind}"
 
 
@@ -179,6 +256,19 @@ def selftest() -> list[str]:
          "共 3 道，都在第二讲。", False),
         ("coverage", {"lectures": ["第二讲", "第四讲"], "count": 3},
          "共 3 道：第二讲、第四讲、第五讲各一道。", False),
+        ("set", {"must_all": ["第四讲"], "forbid": ["第二讲"]},
+         "只有第四讲同时提到，第二讲只有盖伦。", False),
+        ("set", {"must_all": ["第四讲"], "forbid": ["第二讲"]},
+         "只有第四讲同时提到这两个人。", True),
+        ("set", {"must_all": ["第一讲", "第二讲", "第八讲"]},
+         "是第八讲和第二讲，第一讲也是。", True),
+        ("set", {"must_all": ["第一讲", "第二讲", "第八讲"]},
+         "是第八讲和第二讲。", False),
+        # 正确答案里会顺带提到别的讲次（解释为什么是它），此时用 forbid 会误杀
+        ("claim", {"must_all": ["第四讲"], "any_of": ["唯一", "重合"]},
+         "盖伦在第二讲和第四讲，牛顿在第四、五、六讲，两者唯一重合的是第四讲。", True),
+        ("claim", {"must_all": ["第四讲"], "any_of": ["唯一", "重合"]},
+         "盖伦在第二讲和第四讲，牛顿在第五讲。", False),
     ]
     bad = []
     for kind, exp, answer, want in cases:
@@ -202,7 +292,7 @@ def main():
         for s in st:
             print("  -", s)
         return 1
-    print("判分器自检通过（13 个已知对错的样本全部判对）")
+    print("判分器自检通过（19 个已知对错的样本全部判对）")
     scan = raw_scan()
     bad = check_ground_truth(scan)
     if bad:
