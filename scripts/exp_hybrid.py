@@ -31,9 +31,17 @@ TOP_K = 5
 
 
 def doc_text(m: dict) -> str:
+    """必须和 build_index_v2.py 拼法一致。
+
+    之前这里只拼了「题干 + 选项」，而当前向量索引（vectors.npy）是含解析的。
+    结果就是：向量那路看得见解析，BM25 那路看不见——两路输入不对等，
+    算出来的互补效果不可信（实测会让 0.5/0.5 从 58.7% 掉到 54.7%）。
+    """
     parts = [m["stem"]]
     if m.get("options"):
         parts.extend(f"{k}. {v}" for k, v in m["options"].items())
+    if m.get("explanation"):
+        parts.append(m["explanation"])
     return " ".join(parts)
 
 
