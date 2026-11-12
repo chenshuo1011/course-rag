@@ -17,6 +17,17 @@ os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
+# 允许重复加载 OpenMP 运行时。
+#
+# 为什么必须设：
+#   numpy（MKL）和 PyTorch 各带一份 libiomp5md.dll，Intel 的运行时一检测到
+#   第二份被加载就主动中止进程，报 OMP: Error #15。
+#   现象很吓人——程序在"编码查询"那一步无声退出，看起来像代码坏了。
+#   这个变量是官方给的开关：知道重复了，继续跑。
+#
+#   必须在 import torch 之前设置，所以放在文件最顶部。
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 # 只用本地缓存，不联网。
 #
 # 为什么必须这样：
