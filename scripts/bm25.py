@@ -71,7 +71,7 @@ class BM25:
         for w in q_terms:
             idf = self.idf[w]
             for i, tf in enumerate(self.tfs):
-                f = tf.get(w, 0)
+                f=tf.get(w,0)
                 if not f:
                     continue
                 dl = self.lens[i]
