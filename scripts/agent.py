@@ -303,6 +303,24 @@ def _llm(messages: list[dict], max_tokens: int) -> str:
                      retries=LLM_RETRIES, timeout=LLM_TIMEOUT)
 
 
+_USAGE_KEYS = ("prompt_tokens", "completion_tokens", "total_tokens",
+               "prompt_cache_hit_tokens", "prompt_cache_miss_tokens")
+
+
+def _add_usage(acc: dict, u: dict) -> None:
+    """把一次调用的用量累加到 acc。
+
+    为什么必须累加：
+      一个多步问题会调 2~3 次模型，每次都有输入输出。
+      只记最后一次的话，3 步的问题成本会被低估 2/3——
+      算钱这件事上，漏记比记错更危险。
+    """
+    for k in _USAGE_KEYS:
+        v = u.get(k)
+        if v:
+            acc[k] = acc.get(k, 0) + int(v)
+
+
 def _fallback(kb: KB, question: str, called: list, steps: list,
               t0: float, err: Exception, verbose: bool) -> dict:
     """模型调不通时的降级：退回纯检索，把最相关的几道题原样给出去。
@@ -336,6 +354,7 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
     ]
     called: list[str] = []
     steps = []
+    usage: dict = {}
     t0 = time.time()
 
     for step in range(1, MAX_STEPS + 1):
@@ -343,6 +362,7 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
             raw = _llm(messages, 400)
         except Exception as e:
             return _fallback(kb, question, called, steps, t0, e, verbose)
+        _add_usage(usage, LAST_USAGE)
         try:
             act = parse_action(raw)
         except ValueError as e:
@@ -364,7 +384,7 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
                 "steps": steps,
                 "calls": called,
                 "elapsed": round(time.time() - t0, 1),
-                "usage": dict(LAST_USAGE),
+                "usage": usage,
                 "stop": "final",
             }
 
@@ -400,6 +420,7 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
                                 "输出 {\"action\":\"final\",\"answer\":\"...\"}。信息不足就说明缺什么。"})
     try:
         raw = _llm(messages, 300)
+        _add_usage(usage, LAST_USAGE)
     except Exception as e:
         return _fallback(kb, question, called, steps, t0, e, verbose)
     try:
@@ -408,7 +429,7 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
     except ValueError:
         answer = raw
     return {"answer": answer.strip(), "steps": steps, "calls": called,
-            "elapsed": round(time.time() - t0, 1), "usage": dict(LAST_USAGE), "stop": "max_steps"}
+            "elapsed": round(time.time() - t0, 1), "usage": usage, "stop": "max_steps"}
 
 
 def _fmt_args(args: dict) -> str:

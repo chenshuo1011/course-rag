@@ -82,6 +82,10 @@ class AskResponse(BaseModel):
     stop: str
     elapsed_ms: int
     tokens: int
+    # 输入和输出要分开记：单价不一样，按 total 算成本会错得离谱
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cache_hit_tokens: int = 0
 
 
 kb: KB | None = None
@@ -112,13 +116,20 @@ def ask(req: AskRequest):
     t0 = time.time()
     r = run(kb, req.q, verbose=False)
     ms = int((time.time() - t0) * 1000)
-    tokens = int(r["usage"].get("total_tokens") or 0)
+    usage = r["usage"]
+    tokens = int(usage.get("total_tokens") or 0)
+    p_tok = int(usage.get("prompt_tokens") or 0)
+    c_tok = int(usage.get("completion_tokens") or 0)
+    # 缓存命中的输入便宜 50 倍，计价时必须单独拿出来，否则成本会高估一倍
+    hit_tok = int(usage.get("prompt_cache_hit_tokens") or 0)
 
     # 每次请求落一行，后面算 p50/p95 和成本都靠它
     with LOG.open("a", encoding="utf-8") as f:
         f.write(json.dumps({
             "t": time.strftime("%Y-%m-%d %H:%M:%S"),
             "q": req.q, "ms": ms, "tokens": tokens,
+            "prompt_tokens": p_tok, "completion_tokens": c_tok,
+            "cache_hit_tokens": hit_tok,
             "tools": r["calls"], "stop": r["stop"],
             "fallback": r["stop"] == "fallback",
             "answer_len": len(r["answer"]),
@@ -130,6 +141,9 @@ def ask(req: AskRequest):
         stop=r["stop"],
         elapsed_ms=ms,
         tokens=tokens,
+        prompt_tokens=p_tok,
+        completion_tokens=c_tok,
+        cache_hit_tokens=hit_tok,
     )
 
 
