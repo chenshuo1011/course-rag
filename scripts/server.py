@@ -92,6 +92,22 @@ class AskResponse(BaseModel):
 kb: KB | None = None
 
 
+def _lan_ip() -> str:
+    """取本机在局域网里的地址，方便把服务地址念给别人听。
+
+    不真的发包（connect 一个外部地址只为让系统选出出口网卡），失败就退回本机。
+    """
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("10.255.255.255", 1))
+        return s.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+    finally:
+        s.close()
+
+
 @app.on_event("startup")
 def _load():
     """启动时加载索引和模型（约 10 秒），不要放到每个请求里。"""
@@ -99,6 +115,11 @@ def _load():
     print("加载索引与 BM25 ...")
     kb = KB()
     print(f"就绪：{len(kb.meta)} 道题")
+    ip = _lan_ip()
+    print()
+    print(f"  本机访问：  http://127.0.0.1:8000/docs")
+    print(f"  局域网访问：http://{ip}:8000/docs   （同一 WiFi 的手机/电脑）")
+    print()
 
 
 @app.get("/health")
@@ -158,4 +179,6 @@ def ask(req: AskRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # 0.0.0.0 = 监听所有网卡，同一局域网的其他设备才能连进来。
+    # 只写 127.0.0.1 的话，连自己的手机都访问不到。
+    uvicorn.run(app, host="0.0.0.0", port=8000)
