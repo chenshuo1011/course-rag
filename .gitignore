@@ -16,3 +16,4 @@ hf_cache/
 
 # 本地推送辅助脚本，含固定仓库地址，不入库
 push.bat
+run_server.bat
