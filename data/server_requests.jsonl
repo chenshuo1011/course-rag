@@ -315,3 +315,43 @@ scope\": \"stem\"}"], "stop": "final", "answer_len": 69}
 {"t": "2026-11-14 14:39:10", "q": "哪几讲提到了盖伦", "ms": 2560, "tokens": 1095, "tools": ["grep{\"keyword\": \"盖伦\", \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 60}
 {"t": "2026-11-14 14:39:10", "q": "第谷接受的是哪种学说", "ms": 3628, "tokens": 1415, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 61}
 {"t": "2026-11-14 14:39:10", "q": "第谷接受的是哪种学说", "ms": 5280, "tokens": 1409, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 53}
+{"t": "2026-11-14 15:41:44", "q": "哪一讲的题目最多", "ms": 1791, "tokens": 1031, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 46}
+{"t": "2026-11-14 15:41:44", "q": "第三讲有多少道判断题", "ms": 2270, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:44", "q": "多选题比单选题多几道", "ms": 2044, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:44", "q": "第三讲有多少道判断题", "ms": 2139, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:45", "q": "第三讲有多少道判断题", "ms": 1957, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:45", "q": "哪一讲的题目最多", "ms": 2202, "tokens": 1030, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 45}
+{"t": "2026-11-14 15:41:45", "q": "多选题比单选题多几道", "ms": 2412, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:45", "q": "多选题比单选题多几道", "ms": 2150, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:45", "q": "第三讲有多少道判断题", "ms": 2279, "tokens": 976, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:45", "q": "多选题比单选题多几道", "ms": 2607, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:45", "q": "第三讲有多少道判断题", "ms": 2178, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:45", "q": "哪几讲提到了盖伦", "ms": 2574, "tokens": 1120, "tools": ["grep{\"keyword\": \"盖伦\", \"limit\": 15, \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 70}
+{"t": "2026-11-14 15:41:45", "q": "多选题比单选题多几道", "ms": 1884, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:45", "q": "哪几讲提到了盖伦", "ms": 2280, "tokens": 1119, "tools": ["grep{\"keyword\": \"盖伦\", \"limit\": 15, \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 69}
+{"t": "2026-11-14 15:41:45", "q": "哪一讲的题目最多", "ms": 2880, "tokens": 1030, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 45}
+{"t": "2026-11-14 15:41:45", "q": "哪几讲提到了盖伦", "ms": 2211, "tokens": 1105, "tools": ["grep{\"keyword\": \"盖伦\", \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 65}
+{"t": "2026-11-14 15:41:45", "q": "哪几讲提到了盖伦", "ms": 2707, "tokens": 1095, "tools": ["grep{\"keyword\": \"盖伦\", \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 60}
+{"t": "2026-11-14 15:41:45", "q": "哪一讲的题目最多", "ms": 2292, "tokens": 1030, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 45}
+{"t": "2026-11-14 15:41:45", "q": "多选题比单选题多几道", "ms": 2164, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:45", "q": "哪几讲提到了盖伦", "ms": 2325, "tokens": 1121, "tools": ["grep{\"keyword\": \"盖伦\", \"limit\": 15, \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 70}
+{"t": "2026-11-14 15:41:45", "q": "哪一讲的题目最多", "ms": 2386, "tokens": 1029, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 43}
+{"t": "2026-11-14 15:41:45", "q": "多选题比单选题多几道", "ms": 2390, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:45", "q": "第三讲有多少道判断题", "ms": 2331, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:45", "q": "哪几讲提到了盖伦", "ms": 2770, "tokens": 1118, "tools": ["grep{\"keyword\": \"盖伦\", \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 75}
+{"t": "2026-11-14 15:41:45", "q": "第谷接受的是哪种学说", "ms": 3374, "tokens": 1415, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 59}
+{"t": "2026-11-14 15:41:46", "q": "哪一讲的题目最多", "ms": 2521, "tokens": 1039, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 44}
+{"t": "2026-11-14 15:41:46", "q": "哪一讲的题目最多", "ms": 2212, "tokens": 1030, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 45}
+{"t": "2026-11-14 15:41:46", "q": "第谷接受的是哪种学说", "ms": 3199, "tokens": 1416, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 15, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 59}
+{"t": "2026-11-14 15:41:46", "q": "第谷接受的是哪种学说", "ms": 2934, "tokens": 1415, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 59}
+{"t": "2026-11-14 15:41:46", "q": "第三讲有多少道判断题", "ms": 1934, "tokens": 982, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 49}
+{"t": "2026-11-14 15:41:46", "q": "多选题比单选题多几道", "ms": 1848, "tokens": 1023, "tools": ["stats{}"], "stop": "final", "fallback": false, "answer_len": 27}
+{"t": "2026-11-14 15:41:46", "q": "第谷接受的是哪种学说", "ms": 3345, "tokens": 1414, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 57}
+{"t": "2026-11-14 15:41:46", "q": "第谷接受的是哪种学说", "ms": 3313, "tokens": 1415, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 59}
+{"t": "2026-11-14 15:41:46", "q": "哪几讲提到了盖伦", "ms": 2814, "tokens": 1113, "tools": ["grep{\"keyword\": \"盖伦\", \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 70}
+{"t": "2026-11-14 15:41:46", "q": "第谷接受的是哪种学说", "ms": 3318, "tokens": 1411, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 54}
+{"t": "2026-11-14 15:41:46", "q": "第三讲有多少道判断题", "ms": 2371, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:46", "q": "第三讲有多少道判断题", "ms": 1902, "tokens": 975, "tools": ["stats{\"lecture\": \"第三讲\", \"type\": \"judge\"}"], "stop": "final", "fallback": false, "answer_len": 41}
+{"t": "2026-11-14 15:41:46", "q": "哪几讲提到了盖伦", "ms": 2291, "tokens": 1095, "tools": ["grep{\"keyword\": \"盖伦\", \"scope\": \"stem\"}"], "stop": "final", "fallback": false, "answer_len": 60}
+{"t": "2026-11-14 15:41:47", "q": "第谷接受的是哪种学说", "ms": 3519, "tokens": 1415, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 60}
+{"t": "2026-11-14 15:41:47", "q": "第谷接受的是哪种学说", "ms": 2731, "tokens": 1415, "tools": ["grep{\"keyword\": \"第谷\", \"limit\": 10, \"scope\": \"stem\"}", "detail{\"qid\": \"single-第五讲-2\"}"], "stop": "final", "fallback": false, "answer_len": 59}
