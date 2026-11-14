@@ -42,6 +42,7 @@ LOG = ROOT / "data" / "server_requests.jsonl"
 MAX_CONCURRENT = 40
 _in_flight = 0
 _lock = threading.Lock()
+_log_lock = threading.Lock()   # 保护日志写入，见 ask() 里的说明
 
 app = FastAPI(title="课程题库答疑服务", version="0.1")
 
@@ -124,16 +125,24 @@ def ask(req: AskRequest):
     hit_tok = int(usage.get("prompt_cache_hit_tokens") or 0)
 
     # 每次请求落一行，后面算 p50/p95 和成本都靠它
-    with LOG.open("a", encoding="utf-8") as f:
-        f.write(json.dumps({
-            "t": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "q": req.q, "ms": ms, "tokens": tokens,
-            "prompt_tokens": p_tok, "completion_tokens": c_tok,
-            "cache_hit_tokens": hit_tok,
-            "tools": r["calls"], "stop": r["stop"],
-            "fallback": r["stop"] == "fallback",
-            "answer_len": len(r["answer"]),
-        }, ensure_ascii=False) + "\n")
+    #
+    # 这里必须加锁。压测时几十条线程同时以 "a" 模式打开同一个文件写入，
+    # 内容会互相截断——实测 362 行里坏了 3 行（0.8%），
+    # 表现为某些行只剩结尾一段，json 解析直接报错。
+    # 锁 + 一次 write 写完整行，才不会互相插进去。
+    line = json.dumps({
+        "t": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "q": req.q, "ms": ms, "tokens": tokens,
+        "prompt_tokens": p_tok, "completion_tokens": c_tok,
+        "cache_hit_tokens": hit_tok,
+        "tools": r["calls"], "stop": r["stop"],
+        "fallback": r["stop"] == "fallback",
+        "answer_len": len(r["answer"]),
+    }, ensure_ascii=False)
+    with _log_lock:
+        with LOG.open("a", encoding="utf-8") as f:
+            f.write(line + "\n")
+            f.flush()
 
     return AskResponse(
         answer=r["answer"],
