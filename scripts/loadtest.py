@@ -20,7 +20,7 @@ import threading
 import time
 import urllib.request
 
-URL = "http://127.0.0.1:8000/ask"
+URL = "http://127.0.0.1:8000/ask"   # 可用 --url 覆盖
 # 绕开系统代理：本机请求不该走代理，否则会像之前那样报 10061
 OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
@@ -56,11 +56,14 @@ def pct(xs, p):
 
 
 def main():
+    global URL
     ap = argparse.ArgumentParser()
     ap.add_argument("-c", "--concurrency", type=int, default=10, help="同时发几个")
     ap.add_argument("-r", "--rounds", type=int, default=1, help="发几轮")
+    ap.add_argument("--url", default=URL, help="服务地址，默认 8000")
     args = ap.parse_args()
 
+    URL = args.url
     total = args.concurrency * args.rounds
     print(f"并发 {args.concurrency} × {args.rounds} 轮 = {total} 个请求")
     print("=" * 60)
@@ -85,6 +88,9 @@ def main():
     print("=" * 60)
     print(f"成功 {len(good)} / 失败 {len(bad)}")
     if bad:
+        busy = sum(1 for x in bad if "429" in str(x.get("err", "")))
+        if busy:
+            print(f"  其中 429 限流拒绝：{busy} 个（这是设计行为，不是故障）")
         print("失败样例：")
         for x in bad[:3]:
             print("  ", x["err"])

@@ -52,7 +52,7 @@ _OPENER = urllib.request.build_opener(
 
 
 def chat(system: str, user: str, temperature: float = 0.0,
-         max_tokens: int = 120, retries: int = 3) -> str:
+         max_tokens: int = 120, retries: int = 3, timeout: float = 60) -> str:
     if not _CFG.get("API_KEY"):
         raise RuntimeError("未找到 API_KEY，检查 D:/AI-Study/.env")
 
@@ -79,7 +79,7 @@ def chat(system: str, user: str, temperature: float = 0.0,
                     "Authorization": f"Bearer {_CFG['API_KEY']}",
                 },
             )
-            with _OPENER.open(req, timeout=60) as r:
+            with _OPENER.open(req, timeout=timeout) as r:
                 data = json.loads(r.read().decode("utf-8"))
             return data["choices"][0]["message"]["content"].strip()
         except Exception as e:
@@ -89,7 +89,8 @@ def chat(system: str, user: str, temperature: float = 0.0,
 
 
 def chat_msgs(messages: list[dict], temperature: float = 0.0,
-              max_tokens: int = 400, retries: int = 3) -> str:
+              max_tokens: int = 400, retries: int = 3,
+              timeout: float = 90) -> str:
     """多轮消息版本：Agent 需要把工具返回结果作为历史消息带回去，
     而 chat() 只支持 system + 一条 user。"""
     if not _CFG.get("API_KEY"):
@@ -115,7 +116,7 @@ def chat_msgs(messages: list[dict], temperature: float = 0.0,
                     "Authorization": f"Bearer {_CFG['API_KEY']}",
                 },
             )
-            with _OPENER.open(req, timeout=90) as r:
+            with _OPENER.open(req, timeout=timeout) as r:
                 data = json.loads(r.read().decode("utf-8"))
             usage = data.get("usage", {})
             LAST_USAGE.clear()

@@ -41,6 +41,15 @@ DATA = ROOT / "data"
 W_VEC = 0.5
 MAX_STEPS = 8
 
+# 调模型的超时与重试（压测后定的）
+#
+# 原来超时 90 秒、重试 3 次：一旦 DeepSeek 卡住，一条线程被占住 90×3 秒，
+# 40 条线程很快被占满，后面所有人排队。
+# 实测服务端 p95 是 4.07 秒、最慢 15 秒，所以 15 秒足够覆盖正常情况，
+# 超时也只重试 1 次——宁快速失败、走降级，不要拖死整条线程。
+LLM_TIMEOUT = 15
+LLM_RETRIES = 1
+
 # ─────────────────────────── 题库索引 ───────────────────────────
 
 
@@ -288,6 +297,38 @@ def parse_action(text: str) -> dict:
     raise ValueError(f"无法解析成 JSON：{text[:120]}")
 
 
+def _llm(messages: list[dict], max_tokens: int) -> str:
+    """所有调模型的地方都走这里，统一超时与重试次数。"""
+    return chat_msgs(messages, max_tokens=max_tokens,
+                     retries=LLM_RETRIES, timeout=LLM_TIMEOUT)
+
+
+def _fallback(kb: KB, question: str, called: list, steps: list,
+              t0: float, err: Exception, verbose: bool) -> dict:
+    """模型调不通时的降级：退回纯检索，把最相关的几道题原样给出去。
+
+    为什么不直接报错：
+      用户要的是"这道题的答案在哪"，不是"我们的模型挂了"。
+      检索不依赖大模型，它在模型不可用时仍然是可用的——
+      降级能救回一部分价值，而报错只能救回一个 500。
+    """
+    hits = kb.search(question, k=3)
+    lines = ["答案生成超时，以下是题库里最相关的题目："]
+    for i, h in enumerate(hits, 1):
+        lines.append(f"{i}. {h['stem'][:40]} → {h['answer'][:30]}")
+    if verbose:
+        print(f"  降级：{type(err).__name__}: {str(err)[:60]}")
+    return {
+        "answer": "\n".join(lines),
+        "steps": steps,
+        "calls": called + ["search"],
+        "elapsed": round(time.time() - t0, 1),
+        "usage": {},
+        "stop": "fallback",
+        "fallback_qids": [h["qid"] for h in hits],
+    }
+
+
 def run(kb: KB, question: str, verbose: bool = True) -> dict:
     messages = [
         {"role": "system", "content": build_system()},
@@ -298,7 +339,10 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
     t0 = time.time()
 
     for step in range(1, MAX_STEPS + 1):
-        raw = chat_msgs(messages, max_tokens=400)
+        try:
+            raw = _llm(messages, 400)
+        except Exception as e:
+            return _fallback(kb, question, called, steps, t0, e, verbose)
         try:
             act = parse_action(raw)
         except ValueError as e:
@@ -354,7 +398,10 @@ def run(kb: KB, question: str, verbose: bool = True) -> dict:
     messages.append({"role": "user",
                      "content": "已经用完工具调用次数。现在只能基于上面的结果直接给出 answer，"
                                 "输出 {\"action\":\"final\",\"answer\":\"...\"}。信息不足就说明缺什么。"})
-    raw = chat_msgs(messages, max_tokens=300)
+    try:
+        raw = _llm(messages, 300)
+    except Exception as e:
+        return _fallback(kb, question, called, steps, t0, e, verbose)
     try:
         act = parse_action(raw)
         answer = act.get("answer", raw)
