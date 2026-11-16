@@ -28,9 +28,12 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from agent import KB, run
+from quiz import get_one as quiz_get_one
 from quiz import grade as quiz_grade
 from quiz import pick as quiz_pick
 from wrongbook import add as wb_add
+from wrongbook import master as wb_master
+from wrongbook import pending as wb_pending
 from wrongbook import list_by_lecture as wb_list
 from wrongbook import stats as wb_stats
 
@@ -143,6 +146,12 @@ def index():
     return _page("demo.html")
 
 
+@app.get("/review", response_class=HTMLResponse)
+def review_page():
+    """错题复习页：列出待复习，就地重练，答对移出。"""
+    return _page("review.html")
+
+
 @app.get("/chat", response_class=HTMLResponse)
 def chat_page():
     """问答页：一个输入框，接 /ask。"""
@@ -252,6 +261,29 @@ def get_wrong(lecture: str = "", limit: int = 20):
     return {"count": len(rows), "items": rows}
 
 
+@app.get("/wrong/pending")
+def get_pending(lecture: str = "", limit: int = 50):
+    """待复习的错题（已掌握的不出现）。"""
+    rows = wb_pending(lecture, limit)
+    return {"count": len(rows), "items": rows}
+
+
+class MasterIn(BaseModel):
+    qid: str = Field(..., min_length=1)
+    lecture: str = ""
+
+
+@app.post("/wrong/master")
+def mark_mastered(req: MasterIn):
+    """复习答对了：追加一条 mastered 事件。
+
+    注意不是删除记录——文件只追加，状态靠折叠算出来。
+    """
+    ev = wb_master(req.qid, req.lecture)
+    st = wb_stats()
+    return {"ok": True, "event": ev, "待复习": st["待复习"], "已掌握": st["已掌握"]}
+
+
 @app.get("/wrong/stats")
 def get_wrong_stats():
     """按讲次统计：总条数、每讲条数、每讲去重后的题数。"""
@@ -272,8 +304,13 @@ class AnswerIn(BaseModel):
 
 
 @app.get("/quiz")
-def get_quiz(lecture: str = "", type: str = "", n: int = 1):
-    """抽 n 道题（不含答案）。type 可传 single / multi / judge。"""
+def get_quiz(lecture: str = "", type: str = "", n: int = 1, qid: str = ""):
+    """抽 n 道题（不含答案）。传 qid 则取指定那道（错题重练用）。"""
+    if qid:
+        one = quiz_get_one(kb.meta, qid)
+        if not one:
+            raise HTTPException(status_code=404, detail=f"没有这个题号：{qid}")
+        return {"count": 1, "items": [one]}
     items = quiz_pick(kb.meta, lecture=lecture, qtype=type, n=max(1, min(n, 20)))
     return {"count": len(items), "items": items}
 

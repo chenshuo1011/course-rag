@@ -71,6 +71,12 @@ def _public_view(m: dict) -> dict:
     }
 
 
+def get_one(meta: list[dict], qid: str) -> dict | None:
+    """按题号取一道题（学生视角）。错题本重练要用它。"""
+    m = next((x for x in meta if x["id"] == qid), None)
+    return _public_view(m) if m else None
+
+
 def grade(meta: list[dict], qid: str, chosen: str,
           record_wrong: bool = True) -> dict:
     """判一道题，返回结果；答错时自动记进错题本。

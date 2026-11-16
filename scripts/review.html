@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>课程题库 · 错题复习</title>
+<style>
+  :root {
+    --bg: #fafaf7; --card: #fff; --line: #e5e3dc; --text: #1f1e1c;
+    --muted: #6b6a64; --blue: #185fa5; --blue-bg: #e6f1fb;
+    --green: #0f6e3c; --green-bg: #e3f5ea; --red: #a32b21; --red-bg: #fbe9e7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 64px; background: var(--bg); color: var(--text);
+    font: 15px/1.7 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0; }
+  h1 small { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 12px; }
+  .row { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; }
+  .stem { font-size: 15px; line-height: 1.7; flex: 1; }
+  .tags { color: var(--muted); font-size: 12px; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .tag { background: #f1efe8; border-radius: 4px; padding: 0 6px; }
+  .tag.warn { background: var(--red-bg); color: var(--red); }
+  button { font: inherit; cursor: pointer; }
+  button.btn {
+    flex: none; border-radius: 8px; padding: 6px 15px; font-size: 14px;
+    border: 1px solid var(--blue); background: #fff; color: var(--blue);
+  }
+  button.btn:hover { background: var(--blue-bg); }
+  button.primary { background: var(--blue); color: #fff; }
+  button.primary:disabled { opacity: .45; cursor: not-allowed; }
+  .opt {
+    display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
+    cursor: pointer; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 13px; margin-bottom: 8px; font: inherit; color: inherit;
+  }
+  .opt:hover:not(:disabled) { border-color: #b9b7ae; }
+  .opt .k {
+    flex: none; width: 21px; height: 21px; border-radius: 50%; background: #f1efe8;
+    color: var(--muted); font-size: 12px; display: grid; place-items: center; margin-top: 1px;
+  }
+  .opt.sel { border-color: var(--blue); background: var(--blue-bg); }
+  .opt.sel .k { background: var(--blue); color: #fff; }
+  .opt.right { border-color: var(--green); background: var(--green-bg); }
+  .opt.right .k { background: var(--green); color: #fff; }
+  .opt.wrong { border-color: var(--red); background: var(--red-bg); }
+  .opt.wrong .k { background: var(--red); color: #fff; }
+  .verdict { border-radius: 8px; padding: 11px 14px; margin-top: 12px; font-size: 14px; }
+  .verdict.ok { background: var(--green-bg); border: 1px solid #b9e0c8; }
+  .verdict.no { background: var(--red-bg); border: 1px solid #f0c9c4; }
+  .exp { color: var(--muted); font-size: 13.5px; margin-top: 6px; }
+  .empty { text-align: center; color: var(--muted); padding: 48px 0; }
+  .fade { opacity: .35; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>错题复习<small>答对就移出</small></h1>
+    <span class="hint">
+      <a href="/">去答题</a> ·
+      <a href="/chat">去问答</a>
+    </span>
+  </header>
+  <div class="sub" id="sub">加载中…</div>
+  <div id="list"></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const list = $('#list');
+let active = null;   // 当前展开重练的卡片信息
+
+async function api(path, opt) {
+  const r = await fetch(path, opt);
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    throw new Error(d.detail || ('HTTP ' + r.status));
+  }
+  return r.json();
+}
+
+async function load() {
+  list.innerHTML = '';
+  try {
+    const [p, s] = await Promise.all([
+      api('/wrong/pending?limit=50'),
+      api('/wrong/stats')
+    ]);
+    $('#sub').textContent =
+      `待复习 ${s['待复习']} 道 · 已掌握 ${s['已掌握']} 道 · 累计答错 ${s['总条数']} 次`;
+    if (!p.items.length) {
+      list.innerHTML = '<div class="empty">没有待复习的题。去<a href="/">答几道</a>吧。</div>';
+      return;
+    }
+    p.items.forEach(it => list.appendChild(card(it)));
+  } catch (e) {
+    $('#sub').textContent = '加载失败：' + e.message;
+  }
+}
+
+function card(it) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.dataset.qid = it.qid;
+  el.innerHTML = `
+    <div class="row">
+      <div class="stem">${esc(it.q || it.qid)}</div>
+      <button class="btn">重练</button>
+    </div>
+    <div class="tags">
+      <span class="tag">${esc(it.lecture || '未分讲')}</span>
+      ${it.times > 1 ? `<span class="tag warn">错过 ${it.times} 次</span>` : ''}
+      <span style="color:#a9a79e">${esc(it.qid)}</span>
+    </div>`;
+  el.querySelector('button').onclick = () => openPractice(el, it);
+  return el;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function openPractice(el, it) {
+  if (el.dataset.open === '1') return;
+  if (active) { active.el.dataset.open = ''; active.el.querySelector('.practice')?.remove(); }
+  el.dataset.open = '1';
+  active = { el, it };
+
+  const box = document.createElement('div');
+  box.className = 'practice';
+  box.innerHTML = '<div class="hint">正在取题…</div>';
+  el.appendChild(box);
+
+  try {
+    const d = await api('/quiz?qid=' + encodeURIComponent(it.qid));
+    const q = d.items[0];
+    const chosen = new Set();
+    const isJudge = q.type === 'judge';
+    const items = isJudge ? [['正确','正确'],['错误','错误']] : Object.entries(q.options || {});
+
+    box.innerHTML = '<div style="max-width:420px">' +
+      items.map(([k, t]) => `<button class="opt" data-k="${esc(k)}" data-t="${esc(t)}">
+        <span class="k">${isJudge ? '' : esc(k)}</span><span>${esc(t)}</span></button>`).join('') +
+      '</div><div><button class="btn primary" disabled>提交</button></div>';
+
+    box.querySelectorAll('.opt').forEach(b => {
+      b.onclick = () => {
+        const k = b.dataset.k;
+        if (q.type === 'multi') {
+          chosen.has(k) ? chosen.delete(k) : chosen.add(k);
+          b.classList.toggle('sel');
+        } else {
+          chosen.clear(); chosen.add(k);
+          box.querySelectorAll('.opt').forEach(x => x.classList.remove('sel'));
+          b.classList.add('sel');
+        }
+        box.querySelector('.primary').disabled = chosen.size === 0;
+      };
+    });
+
+    box.querySelector('.primary').onclick = async () => {
+      const ans = q.type === 'multi' ? [...chosen].sort().join('') : [...chosen][0];
+      const r = await api('/quiz/answer', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qid: q.qid, chosen: ans })
+      });
+      // 标绿标红
+      box.querySelectorAll('.opt').forEach(b => {
+        b.disabled = true;
+        const key = b.dataset.k, text = b.dataset.t;
+        const isRight = q.type === 'judge' ? key === r.right : r.right.includes(text);
+        b.classList.remove('sel');
+        if (isRight) b.classList.add('right');
+        else if (chosen.has(key)) b.classList.add('wrong');
+      });
+      box.querySelector('.primary').disabled = true;
+
+      if (r.correct) {
+        // 答对 → 标记掌握 → 从待复习移出
+        await api('/wrong/master', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qid: q.qid, lecture: it.lecture || '' })
+        });
+        const v = document.createElement('div');
+        v.className = 'verdict ok';
+        v.innerHTML = `答对了，已移出待复习。${r.explanation ? `<div class="exp">${esc(r.explanation)}</div>` : ''}`;
+        box.appendChild(v);
+        el.classList.add('fade');
+        setTimeout(() => { load(); }, 1200);
+      } else {
+        const v = document.createElement('div');
+        v.className = 'verdict no';
+        v.innerHTML = `还是不对，正确答案：<b>${esc(r.right)}</b>。这道题继续留在待复习里。
+          ${r.explanation ? `<div class="exp">${esc(r.explanation)}</div>` : ''}`;
+        box.appendChild(v);
+      }
+    };
+  } catch (e) {
+    box.innerHTML = `<div class="verdict no">取题失败：${esc(e.message)}</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
