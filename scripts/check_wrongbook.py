@@ -31,12 +31,25 @@ def call(fn, *a, **kw):
         return None, f"{type(e).__name__}: {e}"
 
 
-def check(title, expect, fn, *a, **kw):
+def check(title, expect, fn, *a, post=None, **kw):
+    """post：对返回值再做一层变换，比如 len()。
+
+    加这个参数是因为第一版拿 `2` 直接比一个列表，
+    结果两条正确的实现被判成 BAD——测试本身写错了，
+    和之前评测判分器太宽是同一类问题：验证工具也要被验证。
+    """
     actual, err = call(fn, *a, **kw)
     if err:
         print(f"  [未实现] {title}  ← {err}")
         results.append(False)
         return None
+    if post is not None:
+        try:
+            actual = post(actual)
+        except Exception as e:
+            print(f"  [BAD] {title}（post 变换失败：{e}）")
+            results.append(False)
+            return None
     ok = expect == actual
     print(f"  [{'OK ' if ok else 'BAD'}] {title}")
     if not ok:
@@ -96,13 +109,14 @@ def run():
 
     print("=" * 60)
     print("第 4 步：按讲次查")
-    fifth = check("第五讲条数", 2, wrongbook.list_by_lecture, "第五讲")
-    if fifth:
+    fifth, _ = call(wrongbook.list_by_lecture, "第五讲")
+    check("第五讲条数", 2, wrongbook.list_by_lecture, "第五讲", post=len)
+    if isinstance(fifth, list) and fifth:
         ok = fifth[0].get("wrong") == "望远镜"
         results.append(ok)
         print(f"  [{'OK ' if ok else 'BAD'}] 最近的在前 = {fifth[0].get('wrong')}（期望 望远镜）")
-    check("limit 生效", 1, wrongbook.list_by_lecture, "第五讲", limit=1)
-    check("查不存在的讲次返回空", [], wrongbook.list_by_lecture, "第九讲")
+    check("limit 生效", 1, wrongbook.list_by_lecture, "第五讲", post=len, limit=1)
+    check("查不存在的讲次返回空", 0, wrongbook.list_by_lecture, "第九讲", post=len)
 
     print("=" * 60)
     print("第 5 步：统计")

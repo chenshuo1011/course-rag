@@ -18,10 +18,16 @@
 """
 
 import json
+import threading
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 BOOK = ROOT / "data" / "wrong_book.jsonl"
+
+# 和 server.py 里那个日志 bug 一样：多个请求同时调用 add() 时，
+# 如果不加锁，几次写入会互相插进去，文件里出现半行 JSON。
+_write_lock = threading.Lock()
 
 
 def add(qid: str, lecture: str, question: str,
@@ -37,7 +43,31 @@ def add(qid: str, lecture: str, question: str,
     提示：今天上午修过一个 bug——多个线程同时以 "a" 模式写同一文件，
     内容会互相截断。想想这里会不会遇到同样的问题。
     """
-    raise NotImplementedError("add() 还没写")
+    # 第 1 步：把这条记录组装成一个字典（键名要和上面文档里写的一致）
+    rec = {
+        "t": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "qid": qid,
+        "lecture": lecture,
+        "q": question,
+        "wrong": wrong,
+        "right": right,
+    }
+
+    # 第 2 步：确保 data 目录存在（不存在就建，已存在也不报错）
+    BOOK.parent.mkdir(parents=True, exist_ok=True)
+
+    # 第 3 步：字典 → 一行文本
+    #   ensure_ascii=False 不能省，否则中文会变成 \u7b2c\u4e94\u8bb2
+    line = json.dumps(rec, ensure_ascii=False)
+
+    # 第 4 步：追加写入，行尾加 "\n" 才是"一行一条"
+    #   加锁是因为服务里可能有多个请求同时调用它（见文件顶部说明）
+    with _write_lock:
+        with open(BOOK, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+            f.flush()
+
+    return rec
 
 
 def list_by_lecture(lecture: str = "", limit: int = 20) -> list[dict]:
@@ -49,7 +79,30 @@ def list_by_lecture(lecture: str = "", limit: int = 20) -> list[dict]:
       3. 文件不存在时返回空列表，不要报错
       4. limit 限制返回条数
     """
-    raise NotImplementedError("list_by_lecture() 还没写")
+    # 第 ① 步：文件还不存在（从来没记过错题）就直接返回空
+    if not BOOK.exists():
+        return []
+
+    # 第 ② 步：读进来，每行变成字典
+    #   json.loads 是 add() 里 json.dumps 的反向操作：文本 → 字典
+    #   坏行跳过——压测时见过写坏的行，一条坏的不该让整个功能挂掉
+    rows = []
+    with open(BOOK, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+
+    # 第 ③ 步：按讲次过滤。lecture 为空就不过滤
+    if lecture:
+        rows = [r for r in rows if lecture in r.get("lecture", "")]
+
+    # 第 ④ 步：倒序（后写的在后面，倒过来就是最近的在前）+ 截断
+    return rows[::-1][:limit]
 
 
 def stats() -> dict:
