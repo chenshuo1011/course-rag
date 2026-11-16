@@ -140,9 +140,19 @@ def index():
     浏览器把 http://127.0.0.1:8000/ 和 /quiz 看成同一个源。
     正式部署应该由 nginx 之类的静态服务托管，这里是演示用的捷径。
     """
-    p = Path(__file__).parent / "demo.html"
+    return _page("demo.html")
+
+
+@app.get("/chat", response_class=HTMLResponse)
+def chat_page():
+    """问答页：一个输入框，接 /ask。"""
+    return _page("chat.html")
+
+
+def _page(name: str):
+    p = Path(__file__).parent / name
     if not p.exists():
-        return HTMLResponse("<h1>缺少 demo.html</h1>", status_code=404)
+        return HTMLResponse(f"<h1>缺少 {name}</h1>", status_code=404)
     return HTMLResponse(p.read_text(encoding="utf-8"))
 
 
