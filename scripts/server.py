@@ -28,6 +28,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from agent import KB, run
+from wrongbook import add as wb_add
+from wrongbook import list_by_lecture as wb_list
+from wrongbook import stats as wb_stats
 
 ROOT = Path(__file__).parent.parent
 LOG = ROOT / "data" / "server_requests.jsonl"
@@ -175,6 +178,58 @@ def ask(req: AskRequest):
         completion_tokens=c_tok,
         cache_hit_tokens=hit_tok,
     )
+
+
+# ─────────────────────────── 错题本 ───────────────────────────
+#
+# 设计边界：服务现在不知道"学生答了什么"——/ask 只负责给答案。
+# 所以错题只能由调用方主动上报（前端判错了，或者学生自己点"这道我错了"）。
+# 要做成自动记录，得先有"出题 + 判分"流程，那是另一个功能。
+
+
+class WrongIn(BaseModel):
+    qid: str = Field(..., min_length=1, description="题号，如 single-第五讲-1")
+    lecture: str = Field("", description="讲次；不传就从题库里按题号查")
+    question: str = Field("", description="学生当时的问法，可空")
+    wrong: str = Field("", description="选错的答案")
+    right: str = Field("", description="正确答案；不传就从题库补")
+
+
+def _fill_from_kb(qid: str, lecture: str, right: str) -> tuple[str, str]:
+    """按题号从题库补全讲次和答案。
+
+    为什么要补：调用方常常只知道题号（前端点一下按钮就上报），
+    讲次和正确答案在题库里现成的，没必要让前端再传一遍——
+    传了还可能传错，从题库查是单一事实来源。
+    """
+    if lecture and right:
+        return lecture, right
+    for m in kb.meta:
+        if m["id"] == qid:
+            return lecture or m["lecture"], right or str(
+                m.get("answer_text") or m.get("answer") or "")
+    return lecture, right
+
+
+@app.post("/wrong")
+def add_wrong(req: WrongIn):
+    """记一条错题。题号不存在时也照记——学生反馈比题库完整更重要。"""
+    lecture, right = _fill_from_kb(req.qid, req.lecture, req.right)
+    rec = wb_add(req.qid, lecture, req.question, req.wrong, right)
+    return {"ok": True, "record": rec}
+
+
+@app.get("/wrong")
+def get_wrong(lecture: str = "", limit: int = 20):
+    """查错题，最近的在前。lecture 为空返回全部。"""
+    rows = wb_list(lecture, limit)
+    return {"count": len(rows), "items": rows}
+
+
+@app.get("/wrong/stats")
+def get_wrong_stats():
+    """按讲次统计：总条数、每讲条数、每讲去重后的题数。"""
+    return wb_stats()
 
 
 if __name__ == "__main__":
