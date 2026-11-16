@@ -74,7 +74,7 @@ def run():
     print("=" * 60)
     print("第 1 步：空库不该崩（文件还不存在）")
     check("list_by_lecture() 返回空列表", [], wrongbook.list_by_lecture)
-    check("stats() 返回零", {"总条数": 0, "按讲次": {}}, wrongbook.stats)
+    check("stats() 返回零", {"总条数": 0, "按讲次": {}, "去重": {}}, wrongbook.stats)
 
     print("=" * 60)
     print("第 2 步：写三条记录")
