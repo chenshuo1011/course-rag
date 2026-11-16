@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from agent import KB, run
@@ -130,6 +130,20 @@ def _load():
 @app.get("/health")
 def health():
     return {"ok": kb is not None, "questions": len(kb.meta) if kb else 0}
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    """首页给一个演示页。
+
+    同一个端口提供页面和接口，就不用配 CORS——
+    浏览器把 http://127.0.0.1:8000/ 和 /quiz 看成同一个源。
+    正式部署应该由 nginx 之类的静态服务托管，这里是演示用的捷径。
+    """
+    p = Path(__file__).parent / "demo.html"
+    if not p.exists():
+        return HTMLResponse("<h1>缺少 demo.html</h1>", status_code=404)
+    return HTMLResponse(p.read_text(encoding="utf-8"))
 
 
 @app.post("/ask", response_model=AskResponse)

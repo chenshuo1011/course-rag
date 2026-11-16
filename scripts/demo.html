@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>课程题库 · 答题演示</title>
+<style>
+  :root {
+    --bg: #fafaf7; --card: #fff; --line: #e5e3dc; --text: #1f1e1c;
+    --muted: #6b6a64; --blue: #185fa5; --blue-bg: #e6f1fb;
+    --green: #0f6e3c; --green-bg: #e3f5ea; --red: #a32b21; --red-bg: #fbe9e7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 64px; background: var(--bg); color: var(--text);
+    font: 15px/1.7 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0; }
+  h1 small { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px; margin-bottom: 14px; }
+  .meta { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
+  .tag { background: #f1efe8; border-radius: 4px; padding: 1px 7px; }
+  .stem { font-size: 16px; line-height: 1.75; margin-bottom: 18px; }
+  .opt {
+    display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
+    cursor: pointer; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 14px; margin-bottom: 9px; font: inherit; color: inherit;
+    transition: border-color .12s, background .12s;
+  }
+  .opt:hover:not(:disabled) { border-color: #b9b7ae; background: #fcfcfa; }
+  .opt:disabled { cursor: default; }
+  .opt .k {
+    flex: none; width: 22px; height: 22px; border-radius: 50%; background: #f1efe8;
+    color: var(--muted); font-size: 12.5px; display: grid; place-items: center; margin-top: 1px;
+  }
+  .opt.sel { border-color: var(--blue); background: var(--blue-bg); }
+  .opt.sel .k { background: var(--blue); color: #fff; }
+  .opt.right { border-color: var(--green); background: var(--green-bg); }
+  .opt.right .k { background: var(--green); color: #fff; }
+  .opt.wrong { border-color: var(--red); background: var(--red-bg); }
+  .opt.wrong .k { background: var(--red); color: #fff; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  button.btn {
+    font: inherit; cursor: pointer; border-radius: 8px; padding: 9px 18px;
+    border: 1px solid var(--blue); background: var(--blue); color: #fff;
+  }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  button.ghost { background: #fff; color: var(--text); border-color: var(--line); }
+  .verdict { border-radius: 8px; padding: 14px 16px; margin-top: 16px; font-size: 14.5px; }
+  .verdict.ok { background: var(--green-bg); border: 1px solid #b9e0c8; }
+  .verdict.no { background: var(--red-bg); border: 1px solid #f0c9c4; }
+  .exp { color: var(--muted); margin-top: 8px; font-size: 14px; }
+  .stat { display: flex; gap: 24px; flex-wrap: wrap; color: var(--muted); font-size: 13.5px; }
+  .stat b { color: var(--text); font-weight: 600; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .err { color: var(--red); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>课程题库 · 答题演示<small>抽题 / 判分 / 错题本</small></h1>
+    <span class="hint" id="conn">连接中…</span>
+  </header>
+
+  <div class="card">
+    <div class="meta">
+      <span class="tag" id="type">—</span>
+      <span id="lecture"></span>
+      <span id="qid" style="color:#a9a79e"></span>
+    </div>
+    <div class="stem" id="stem">正在抽题…</div>
+    <div id="opts"></div>
+    <div class="actions">
+      <button class="btn" id="submit" disabled>提交</button>
+      <button class="btn ghost" id="next">换一道</button>
+    </div>
+    <div id="feedback"></div>
+  </div>
+
+  <div class="card">
+    <div class="stat">
+      <span>错题总数 <b id="s-total">—</b></span>
+      <span>其中不同题目 <b id="s-uniq">—</b></span>
+      <span>覆盖讲次 <b id="s-lec">—</b></span>
+    </div>
+  </div>
+  <div class="hint">演示页，直接调 /quiz、/quiz/answer、/wrong/stats。答错会自动进错题本。</div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const NAMES = { single: '单选', multi: '多选', judge: '判断' };
+let cur = null;          // 当前题目（学生视角）
+let chosen = new Set();  // 已选项的 key
+let answered = false;
+
+async function api(path, opt) {
+  const r = await fetch(path, opt);
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    throw new Error(d.detail || ('HTTP ' + r.status));
+  }
+  return r.json();
+}
+
+function renderOptions(q) {
+  const box = $('#opts');
+  box.innerHTML = '';
+  const items = q.type === 'judge'
+    ? [['正确', '正确'], ['错误', '错误']]
+    : Object.entries(q.options || {});
+  for (const [key, text] of items) {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.dataset.key = key;
+    b.dataset.text = text;
+    b.innerHTML = `<span class="k">${q.type === 'judge' ? '' : key}</span><span>${text}</span>`;
+    b.onclick = () => toggle(b, key);
+    box.appendChild(b);
+  }
+}
+
+function toggle(btn, key) {
+  if (answered) return;
+  if (cur.type === 'multi') {
+    chosen.has(key) ? chosen.delete(key) : chosen.add(key);
+    btn.classList.toggle('sel');
+  } else {
+    chosen = new Set([key]);
+    document.querySelectorAll('.opt').forEach(e => e.classList.remove('sel'));
+    btn.classList.add('sel');
+  }
+  $('#submit').disabled = chosen.size === 0;
+}
+
+async function load() {
+  answered = false; chosen = new Set();
+  $('#feedback').innerHTML = '';
+  $('#submit').disabled = true;
+  $('#type').textContent = '—'; $('#lecture').textContent = ''; $('#qid').textContent = '';
+  $('#opts').innerHTML = '';
+  $('#stem').textContent = '正在抽题…';
+  try {
+    // 三成概率专抽判断题，其余随机
+    const qs = Math.random() < 0.35 ? '&type=judge' : '';
+    const d = await api('/quiz?n=1' + qs);
+    cur = d.items[0];
+    if (!cur) { $('#stem').textContent = '这个范围内没有题'; return; }
+    $('#type').textContent = NAMES[cur.type] || cur.type;
+    $('#lecture').textContent = cur.lecture || '';
+    $('#qid').textContent = cur.qid;
+    $('#stem').textContent = cur.stem;
+    renderOptions(cur);
+  } catch (e) {
+    $('#stem').textContent = '抽题失败：' + e.message;
+  }
+}
+
+async function submit() {
+  $('#submit').disabled = true;
+  const ans = cur.type === 'multi'
+    ? [...chosen].sort().join('')
+    : [...chosen][0];
+  try {
+    const r = await api('/quiz/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qid: cur.qid, chosen: ans })
+    });
+    answered = true;
+    paint(r);
+    refreshStats();
+  } catch (e) {
+    $('#feedback').innerHTML = `<div class="err">提交失败：${e.message}</div>`;
+  }
+}
+
+function paint(r) {
+  document.querySelectorAll('.opt').forEach(b => {
+    b.disabled = true;
+    const key = b.dataset.key;
+    const text = b.dataset.text;
+    // 判断题直接比字面；选择题拿选项内容去正确答案文本里找
+    const isRight = cur.type === 'judge' ? key === r.right : r.right.includes(text);
+    b.classList.remove('sel');
+    if (isRight) b.classList.add('right');
+    else if (chosen.has(key)) b.classList.add('wrong');
+  });
+
+  const head = r.correct
+    ? '答对了。'
+    : `答错了，正确答案：<b>${r.right}</b>${r.recorded ? '（已记入错题本）' : ''}`;
+  $('#feedback').innerHTML =
+    `<div class="verdict ${r.correct ? 'ok' : 'no'}">${head}
+       ${r.explanation ? `<div class="exp">${r.explanation}</div>` : ''}
+     </div>`;
+}
+
+async function refreshStats() {
+  try {
+    const s = await api('/wrong/stats');
+    $('#s-total').textContent = s['总条数'] ?? 0;
+    const uniq = Object.values(s['去重'] || {}).reduce((a, b) => a + b, 0);
+    $('#s-uniq').textContent = uniq;
+    $('#s-lec').textContent = Object.keys(s['按讲次'] || {}).length;
+  } catch (_) { /* 统计失败不影响答题 */ }
+}
+
+async function ping() {
+  try {
+    const h = await api('/health');
+    $('#conn').textContent = `已连接 · ${h.questions} 题`;
+  } catch (_) {
+    $('#conn').textContent = '未连接（服务没起？）';
+  }
+}
+
+$('#submit').onclick = submit;
+$('#next').onclick = load;
+ping(); load(); refreshStats();
+</script>
+</body>
+</html>
