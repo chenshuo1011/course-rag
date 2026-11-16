@@ -23,11 +23,13 @@ import threading
 import time
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from agent import KB, run
+from quiz import grade as quiz_grade
+from quiz import pick as quiz_pick
 from wrongbook import add as wb_add
 from wrongbook import list_by_lecture as wb_list
 from wrongbook import stats as wb_stats
@@ -230,6 +232,35 @@ def get_wrong(lecture: str = "", limit: int = 20):
 def get_wrong_stats():
     """按讲次统计：总条数、每讲条数、每讲去重后的题数。"""
     return wb_stats()
+
+
+# ─────────────────────────── 答题模式 ───────────────────────────
+#
+# 和 /ask 是两条独立的路：
+#   /ask  要模型多步决策，回答自然语言
+#   /quiz 不需要模型——抽题是随机，判分是比对
+# 共享的只有题库（kb.meta）和错题本。所以答题做坏了也不会影响问答。
+
+
+class AnswerIn(BaseModel):
+    qid: str = Field(..., min_length=1)
+    chosen: str = Field(..., description="单选 B；多选 ABD；判断 正确/错误")
+
+
+@app.get("/quiz")
+def get_quiz(lecture: str = "", type: str = "", n: int = 1):
+    """抽 n 道题（不含答案）。type 可传 single / multi / judge。"""
+    items = quiz_pick(kb.meta, lecture=lecture, qtype=type, n=max(1, min(n, 20)))
+    return {"count": len(items), "items": items}
+
+
+@app.post("/quiz/answer")
+def answer_quiz(req: AnswerIn):
+    """交答案。答错会自动记进错题本，并在返回里标 recorded=true。"""
+    r = quiz_grade(kb.meta, req.qid, req.chosen)
+    if "error" in r:
+        raise HTTPException(status_code=404, detail=r["error"])
+    return r
 
 
 if __name__ == "__main__":
