@@ -1,0 +1,3059 @@
+{
+ "第一讲": {
+  "lecture": "第一讲",
+  "file": "第一讲.txt",
+  "qids": [
+   "judge-第一讲-1",
+   "judge-第一讲-2",
+   "judge-第一讲-3",
+   "judge-第一讲-4",
+   "judge-第一讲-5",
+   "judge-第一讲-6",
+   "judge-第一讲-7",
+   "judge-第一讲-8",
+   "judge-第一讲-9",
+   "judge-第一讲-10",
+   "judge-第一讲-11",
+   "judge-第一讲-12",
+   "judge-第一讲-13",
+   "judge-第一讲-14",
+   "judge-第一讲-15",
+   "judge-第一讲-16",
+   "judge-第一讲-17",
+   "judge-第一讲-18",
+   "judge-第一讲-19",
+   "judge-第一讲-20",
+   "multi-第一讲-1",
+   "multi-第一讲-2",
+   "multi-第一讲-3",
+   "multi-第一讲-4",
+   "multi-第一讲-5",
+   "multi-第一讲-6",
+   "multi-第一讲-7",
+   "multi-第一讲-8",
+   "multi-第一讲-9",
+   "multi-第一讲-10",
+   "multi-第一讲-11",
+   "multi-第一讲-12",
+   "multi-第一讲-13",
+   "multi-第一讲-14",
+   "multi-第一讲-15",
+   "multi-第一讲-16",
+   "multi-第一讲-17",
+   "single-第一讲-1",
+   "single-第一讲-2",
+   "single-第一讲-3",
+   "single-第一讲-4",
+   "single-第一讲-5",
+   "single-第一讲-6",
+   "single-第一讲-7",
+   "single-第一讲-8",
+   "single-第一讲-9",
+   "single-第一讲-10",
+   "single-第一讲-11",
+   "single-第一讲-12",
+   "single-第一讲-13",
+   "single-第一讲-14",
+   "single-第一讲-15"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第一讲-1",
+    "start": 0,
+    "end": 123
+   },
+   {
+    "qid": "judge-第一讲-2",
+    "start": 125,
+    "end": 254
+   },
+   {
+    "qid": "judge-第一讲-3",
+    "start": 256,
+    "end": 404
+   },
+   {
+    "qid": "judge-第一讲-4",
+    "start": 406,
+    "end": 472
+   },
+   {
+    "qid": "judge-第一讲-5",
+    "start": 474,
+    "end": 562
+   },
+   {
+    "qid": "judge-第一讲-6",
+    "start": 564,
+    "end": 650
+   },
+   {
+    "qid": "judge-第一讲-7",
+    "start": 652,
+    "end": 741
+   },
+   {
+    "qid": "judge-第一讲-8",
+    "start": 743,
+    "end": 829
+   },
+   {
+    "qid": "judge-第一讲-9",
+    "start": 831,
+    "end": 919
+   },
+   {
+    "qid": "judge-第一讲-10",
+    "start": 921,
+    "end": 983
+   },
+   {
+    "qid": "judge-第一讲-11",
+    "start": 985,
+    "end": 1049
+   },
+   {
+    "qid": "judge-第一讲-12",
+    "start": 1051,
+    "end": 1113
+   },
+   {
+    "qid": "judge-第一讲-13",
+    "start": 1115,
+    "end": 1177
+   },
+   {
+    "qid": "judge-第一讲-14",
+    "start": 1179,
+    "end": 1249
+   },
+   {
+    "qid": "judge-第一讲-15",
+    "start": 1251,
+    "end": 1309
+   },
+   {
+    "qid": "judge-第一讲-16",
+    "start": 1311,
+    "end": 1441
+   },
+   {
+    "qid": "judge-第一讲-17",
+    "start": 1443,
+    "end": 1528
+   },
+   {
+    "qid": "judge-第一讲-18",
+    "start": 1530,
+    "end": 1642
+   },
+   {
+    "qid": "judge-第一讲-19",
+    "start": 1644,
+    "end": 1724
+   },
+   {
+    "qid": "judge-第一讲-20",
+    "start": 1726,
+    "end": 1804
+   },
+   {
+    "qid": "multi-第一讲-1",
+    "start": 1806,
+    "end": 1964
+   },
+   {
+    "qid": "multi-第一讲-2",
+    "start": 1966,
+    "end": 2111
+   },
+   {
+    "qid": "multi-第一讲-3",
+    "start": 2113,
+    "end": 2260
+   },
+   {
+    "qid": "multi-第一讲-4",
+    "start": 2262,
+    "end": 2386
+   },
+   {
+    "qid": "multi-第一讲-5",
+    "start": 2388,
+    "end": 2505
+   },
+   {
+    "qid": "multi-第一讲-6",
+    "start": 2507,
+    "end": 2747
+   },
+   {
+    "qid": "multi-第一讲-7",
+    "start": 2749,
+    "end": 2883
+   },
+   {
+    "qid": "multi-第一讲-8",
+    "start": 2885,
+    "end": 3039
+   },
+   {
+    "qid": "multi-第一讲-9",
+    "start": 3041,
+    "end": 3248
+   },
+   {
+    "qid": "multi-第一讲-10",
+    "start": 3250,
+    "end": 3482
+   },
+   {
+    "qid": "multi-第一讲-11",
+    "start": 3484,
+    "end": 3662
+   },
+   {
+    "qid": "multi-第一讲-12",
+    "start": 3664,
+    "end": 4155
+   },
+   {
+    "qid": "multi-第一讲-13",
+    "start": 4157,
+    "end": 4337
+   },
+   {
+    "qid": "multi-第一讲-14",
+    "start": 4339,
+    "end": 4465
+   },
+   {
+    "qid": "multi-第一讲-15",
+    "start": 4467,
+    "end": 4653
+   },
+   {
+    "qid": "multi-第一讲-16",
+    "start": 4655,
+    "end": 4846
+   },
+   {
+    "qid": "multi-第一讲-17",
+    "start": 4848,
+    "end": 5082
+   },
+   {
+    "qid": "single-第一讲-1",
+    "start": 5084,
+    "end": 5196
+   },
+   {
+    "qid": "single-第一讲-2",
+    "start": 5198,
+    "end": 5339
+   },
+   {
+    "qid": "single-第一讲-3",
+    "start": 5341,
+    "end": 5502
+   },
+   {
+    "qid": "single-第一讲-4",
+    "start": 5504,
+    "end": 5595
+   },
+   {
+    "qid": "single-第一讲-5",
+    "start": 5597,
+    "end": 5782
+   },
+   {
+    "qid": "single-第一讲-6",
+    "start": 5784,
+    "end": 5906
+   },
+   {
+    "qid": "single-第一讲-7",
+    "start": 5908,
+    "end": 6047
+   },
+   {
+    "qid": "single-第一讲-8",
+    "start": 6049,
+    "end": 6212
+   },
+   {
+    "qid": "single-第一讲-9",
+    "start": 6214,
+    "end": 6355
+   },
+   {
+    "qid": "single-第一讲-10",
+    "start": 6357,
+    "end": 6507
+   },
+   {
+    "qid": "single-第一讲-11",
+    "start": 6509,
+    "end": 6710
+   },
+   {
+    "qid": "single-第一讲-12",
+    "start": 6712,
+    "end": 6863
+   },
+   {
+    "qid": "single-第一讲-13",
+    "start": 6865,
+    "end": 7063
+   },
+   {
+    "qid": "single-第一讲-14",
+    "start": 7065,
+    "end": 7192
+   },
+   {
+    "qid": "single-第一讲-15",
+    "start": 7194,
+    "end": 7381
+   }
+  ],
+  "chars": 7381
+ },
+ "第二讲": {
+  "lecture": "第二讲",
+  "file": "第二讲.txt",
+  "qids": [
+   "judge-第二讲-1",
+   "judge-第二讲-2",
+   "judge-第二讲-3",
+   "judge-第二讲-4",
+   "judge-第二讲-5",
+   "judge-第二讲-6",
+   "judge-第二讲-7",
+   "judge-第二讲-8",
+   "judge-第二讲-9",
+   "judge-第二讲-10",
+   "judge-第二讲-11",
+   "judge-第二讲-12",
+   "judge-第二讲-13",
+   "judge-第二讲-14",
+   "judge-第二讲-15",
+   "judge-第二讲-16",
+   "judge-第二讲-17",
+   "judge-第二讲-18",
+   "judge-第二讲-19",
+   "judge-第二讲-20",
+   "judge-第二讲-21",
+   "multi-第二讲-1",
+   "multi-第二讲-2",
+   "multi-第二讲-3",
+   "multi-第二讲-4",
+   "multi-第二讲-5",
+   "multi-第二讲-6",
+   "multi-第二讲-7",
+   "multi-第二讲-8",
+   "multi-第二讲-9",
+   "multi-第二讲-10",
+   "multi-第二讲-11",
+   "multi-第二讲-12",
+   "multi-第二讲-13",
+   "single-第二讲-1",
+   "single-第二讲-2",
+   "single-第二讲-3",
+   "single-第二讲-4",
+   "single-第二讲-5",
+   "single-第二讲-6",
+   "single-第二讲-7",
+   "single-第二讲-8",
+   "single-第二讲-9",
+   "single-第二讲-10",
+   "single-第二讲-11",
+   "single-第二讲-12",
+   "single-第二讲-13",
+   "single-第二讲-14",
+   "single-第二讲-15",
+   "single-第二讲-16",
+   "single-第二讲-17",
+   "single-第二讲-18",
+   "single-第二讲-19",
+   "single-第二讲-20",
+   "single-第二讲-21",
+   "single-第二讲-22",
+   "single-第二讲-23",
+   "single-第二讲-24"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第二讲-1",
+    "start": 0,
+    "end": 79
+   },
+   {
+    "qid": "judge-第二讲-2",
+    "start": 81,
+    "end": 186
+   },
+   {
+    "qid": "judge-第二讲-3",
+    "start": 188,
+    "end": 292
+   },
+   {
+    "qid": "judge-第二讲-4",
+    "start": 294,
+    "end": 365
+   },
+   {
+    "qid": "judge-第二讲-5",
+    "start": 367,
+    "end": 437
+   },
+   {
+    "qid": "judge-第二讲-6",
+    "start": 439,
+    "end": 562
+   },
+   {
+    "qid": "judge-第二讲-7",
+    "start": 564,
+    "end": 668
+   },
+   {
+    "qid": "judge-第二讲-8",
+    "start": 670,
+    "end": 724
+   },
+   {
+    "qid": "judge-第二讲-9",
+    "start": 726,
+    "end": 811
+   },
+   {
+    "qid": "judge-第二讲-10",
+    "start": 813,
+    "end": 893
+   },
+   {
+    "qid": "judge-第二讲-11",
+    "start": 895,
+    "end": 1006
+   },
+   {
+    "qid": "judge-第二讲-12",
+    "start": 1008,
+    "end": 1113
+   },
+   {
+    "qid": "judge-第二讲-13",
+    "start": 1115,
+    "end": 1206
+   },
+   {
+    "qid": "judge-第二讲-14",
+    "start": 1208,
+    "end": 1289
+   },
+   {
+    "qid": "judge-第二讲-15",
+    "start": 1291,
+    "end": 1358
+   },
+   {
+    "qid": "judge-第二讲-16",
+    "start": 1360,
+    "end": 1418
+   },
+   {
+    "qid": "judge-第二讲-17",
+    "start": 1420,
+    "end": 1518
+   },
+   {
+    "qid": "judge-第二讲-18",
+    "start": 1520,
+    "end": 1587
+   },
+   {
+    "qid": "judge-第二讲-19",
+    "start": 1589,
+    "end": 1659
+   },
+   {
+    "qid": "judge-第二讲-20",
+    "start": 1661,
+    "end": 1784
+   },
+   {
+    "qid": "judge-第二讲-21",
+    "start": 1786,
+    "end": 1863
+   },
+   {
+    "qid": "multi-第二讲-1",
+    "start": 1865,
+    "end": 1969
+   },
+   {
+    "qid": "multi-第二讲-2",
+    "start": 1971,
+    "end": 2075
+   },
+   {
+    "qid": "multi-第二讲-3",
+    "start": 2077,
+    "end": 2198
+   },
+   {
+    "qid": "multi-第二讲-4",
+    "start": 2200,
+    "end": 2332
+   },
+   {
+    "qid": "multi-第二讲-5",
+    "start": 2334,
+    "end": 2449
+   },
+   {
+    "qid": "multi-第二讲-6",
+    "start": 2451,
+    "end": 2587
+   },
+   {
+    "qid": "multi-第二讲-7",
+    "start": 2589,
+    "end": 2718
+   },
+   {
+    "qid": "multi-第二讲-8",
+    "start": 2720,
+    "end": 2844
+   },
+   {
+    "qid": "multi-第二讲-9",
+    "start": 2846,
+    "end": 2965
+   },
+   {
+    "qid": "multi-第二讲-10",
+    "start": 2967,
+    "end": 3110
+   },
+   {
+    "qid": "multi-第二讲-11",
+    "start": 3112,
+    "end": 3202
+   },
+   {
+    "qid": "multi-第二讲-12",
+    "start": 3204,
+    "end": 3322
+   },
+   {
+    "qid": "multi-第二讲-13",
+    "start": 3324,
+    "end": 3426
+   },
+   {
+    "qid": "single-第二讲-1",
+    "start": 3428,
+    "end": 3523
+   },
+   {
+    "qid": "single-第二讲-2",
+    "start": 3525,
+    "end": 3615
+   },
+   {
+    "qid": "single-第二讲-3",
+    "start": 3617,
+    "end": 3766
+   },
+   {
+    "qid": "single-第二讲-4",
+    "start": 3768,
+    "end": 3918
+   },
+   {
+    "qid": "single-第二讲-5",
+    "start": 3920,
+    "end": 4007
+   },
+   {
+    "qid": "single-第二讲-6",
+    "start": 4009,
+    "end": 4145
+   },
+   {
+    "qid": "single-第二讲-7",
+    "start": 4147,
+    "end": 4274
+   },
+   {
+    "qid": "single-第二讲-8",
+    "start": 4276,
+    "end": 4411
+   },
+   {
+    "qid": "single-第二讲-9",
+    "start": 4413,
+    "end": 4523
+   },
+   {
+    "qid": "single-第二讲-10",
+    "start": 4525,
+    "end": 4684
+   },
+   {
+    "qid": "single-第二讲-11",
+    "start": 4686,
+    "end": 4832
+   },
+   {
+    "qid": "single-第二讲-12",
+    "start": 4834,
+    "end": 4973
+   },
+   {
+    "qid": "single-第二讲-13",
+    "start": 4975,
+    "end": 5141
+   },
+   {
+    "qid": "single-第二讲-14",
+    "start": 5143,
+    "end": 5253
+   },
+   {
+    "qid": "single-第二讲-15",
+    "start": 5255,
+    "end": 5381
+   },
+   {
+    "qid": "single-第二讲-16",
+    "start": 5383,
+    "end": 5519
+   },
+   {
+    "qid": "single-第二讲-17",
+    "start": 5521,
+    "end": 5614
+   },
+   {
+    "qid": "single-第二讲-18",
+    "start": 5616,
+    "end": 5728
+   },
+   {
+    "qid": "single-第二讲-19",
+    "start": 5730,
+    "end": 5822
+   },
+   {
+    "qid": "single-第二讲-20",
+    "start": 5824,
+    "end": 5951
+   },
+   {
+    "qid": "single-第二讲-21",
+    "start": 5953,
+    "end": 6059
+   },
+   {
+    "qid": "single-第二讲-22",
+    "start": 6061,
+    "end": 6166
+   },
+   {
+    "qid": "single-第二讲-23",
+    "start": 6168,
+    "end": 6303
+   },
+   {
+    "qid": "single-第二讲-24",
+    "start": 6305,
+    "end": 6416
+   }
+  ],
+  "chars": 6416
+ },
+ "第三讲_古代中国": {
+  "lecture": "第三讲　古代中国",
+  "file": "第三讲_古代中国.txt",
+  "qids": [
+   "judge-第三讲　古代中国-1",
+   "judge-第三讲　古代中国-2",
+   "judge-第三讲　古代中国-3",
+   "judge-第三讲　古代中国-4",
+   "judge-第三讲　古代中国-5",
+   "judge-第三讲　古代中国-6",
+   "judge-第三讲　古代中国-7",
+   "judge-第三讲　古代中国-8",
+   "judge-第三讲　古代中国-9",
+   "judge-第三讲　古代中国-10",
+   "judge-第三讲　古代中国-11",
+   "judge-第三讲　古代中国-12",
+   "judge-第三讲　古代中国-13",
+   "judge-第三讲　古代中国-14",
+   "judge-第三讲　古代中国-15",
+   "judge-第三讲　古代中国-16",
+   "judge-第三讲　古代中国-17",
+   "judge-第三讲　古代中国-18",
+   "multi-第三讲　古代中国-1",
+   "multi-第三讲　古代中国-2",
+   "multi-第三讲　古代中国-3",
+   "multi-第三讲　古代中国-4",
+   "multi-第三讲　古代中国-5",
+   "multi-第三讲　古代中国-6",
+   "multi-第三讲　古代中国-7",
+   "multi-第三讲　古代中国-8",
+   "multi-第三讲　古代中国-9",
+   "multi-第三讲　古代中国-10",
+   "multi-第三讲　古代中国-11",
+   "multi-第三讲　古代中国-12",
+   "multi-第三讲　古代中国-13",
+   "multi-第三讲　古代中国-14",
+   "multi-第三讲　古代中国-15",
+   "multi-第三讲　古代中国-16",
+   "multi-第三讲　古代中国-17",
+   "multi-第三讲　古代中国-18",
+   "multi-第三讲　古代中国-19",
+   "multi-第三讲　古代中国-20",
+   "multi-第三讲　古代中国-21",
+   "single-第三讲　古代中国-1",
+   "single-第三讲　古代中国-2",
+   "single-第三讲　古代中国-3",
+   "single-第三讲　古代中国-4",
+   "single-第三讲　古代中国-5",
+   "single-第三讲　古代中国-6",
+   "single-第三讲　古代中国-7",
+   "single-第三讲　古代中国-8",
+   "single-第三讲　古代中国-9",
+   "single-第三讲　古代中国-10",
+   "single-第三讲　古代中国-11",
+   "single-第三讲　古代中国-12",
+   "single-第三讲　古代中国-13",
+   "single-第三讲　古代中国-14",
+   "single-第三讲　古代中国-15",
+   "single-第三讲　古代中国-16",
+   "single-第三讲　古代中国-17",
+   "single-第三讲　古代中国-18",
+   "single-第三讲　古代中国-19",
+   "single-第三讲　古代中国-20",
+   "single-第三讲　古代中国-21",
+   "single-第三讲　古代中国-22",
+   "single-第三讲　古代中国-23",
+   "single-第三讲　古代中国-24",
+   "single-第三讲　古代中国-25"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第三讲　古代中国-1",
+    "start": 0,
+    "end": 93
+   },
+   {
+    "qid": "judge-第三讲　古代中国-2",
+    "start": 95,
+    "end": 157
+   },
+   {
+    "qid": "judge-第三讲　古代中国-3",
+    "start": 159,
+    "end": 250
+   },
+   {
+    "qid": "judge-第三讲　古代中国-4",
+    "start": 252,
+    "end": 323
+   },
+   {
+    "qid": "judge-第三讲　古代中国-5",
+    "start": 325,
+    "end": 406
+   },
+   {
+    "qid": "judge-第三讲　古代中国-6",
+    "start": 408,
+    "end": 483
+   },
+   {
+    "qid": "judge-第三讲　古代中国-7",
+    "start": 485,
+    "end": 549
+   },
+   {
+    "qid": "judge-第三讲　古代中国-8",
+    "start": 551,
+    "end": 634
+   },
+   {
+    "qid": "judge-第三讲　古代中国-9",
+    "start": 636,
+    "end": 721
+   },
+   {
+    "qid": "judge-第三讲　古代中国-10",
+    "start": 723,
+    "end": 808
+   },
+   {
+    "qid": "judge-第三讲　古代中国-11",
+    "start": 810,
+    "end": 888
+   },
+   {
+    "qid": "judge-第三讲　古代中国-12",
+    "start": 890,
+    "end": 963
+   },
+   {
+    "qid": "judge-第三讲　古代中国-13",
+    "start": 965,
+    "end": 1065
+   },
+   {
+    "qid": "judge-第三讲　古代中国-14",
+    "start": 1067,
+    "end": 1130
+   },
+   {
+    "qid": "judge-第三讲　古代中国-15",
+    "start": 1132,
+    "end": 1223
+   },
+   {
+    "qid": "judge-第三讲　古代中国-16",
+    "start": 1225,
+    "end": 1394
+   },
+   {
+    "qid": "judge-第三讲　古代中国-17",
+    "start": 1396,
+    "end": 1477
+   },
+   {
+    "qid": "judge-第三讲　古代中国-18",
+    "start": 1479,
+    "end": 1564
+   },
+   {
+    "qid": "multi-第三讲　古代中国-1",
+    "start": 1566,
+    "end": 1676
+   },
+   {
+    "qid": "multi-第三讲　古代中国-2",
+    "start": 1678,
+    "end": 1828
+   },
+   {
+    "qid": "multi-第三讲　古代中国-3",
+    "start": 1830,
+    "end": 2050
+   },
+   {
+    "qid": "multi-第三讲　古代中国-4",
+    "start": 2052,
+    "end": 2347
+   },
+   {
+    "qid": "multi-第三讲　古代中国-5",
+    "start": 2349,
+    "end": 2439
+   },
+   {
+    "qid": "multi-第三讲　古代中国-6",
+    "start": 2441,
+    "end": 2534
+   },
+   {
+    "qid": "multi-第三讲　古代中国-7",
+    "start": 2536,
+    "end": 2664
+   },
+   {
+    "qid": "multi-第三讲　古代中国-8",
+    "start": 2666,
+    "end": 2788
+   },
+   {
+    "qid": "multi-第三讲　古代中国-9",
+    "start": 2790,
+    "end": 2995
+   },
+   {
+    "qid": "multi-第三讲　古代中国-10",
+    "start": 2997,
+    "end": 3119
+   },
+   {
+    "qid": "multi-第三讲　古代中国-11",
+    "start": 3121,
+    "end": 3305
+   },
+   {
+    "qid": "multi-第三讲　古代中国-12",
+    "start": 3307,
+    "end": 3533
+   },
+   {
+    "qid": "multi-第三讲　古代中国-13",
+    "start": 3535,
+    "end": 3709
+   },
+   {
+    "qid": "multi-第三讲　古代中国-14",
+    "start": 3711,
+    "end": 4099
+   },
+   {
+    "qid": "multi-第三讲　古代中国-15",
+    "start": 4101,
+    "end": 4255
+   },
+   {
+    "qid": "multi-第三讲　古代中国-16",
+    "start": 4257,
+    "end": 4496
+   },
+   {
+    "qid": "multi-第三讲　古代中国-17",
+    "start": 4498,
+    "end": 4625
+   },
+   {
+    "qid": "multi-第三讲　古代中国-18",
+    "start": 4627,
+    "end": 4779
+   },
+   {
+    "qid": "multi-第三讲　古代中国-19",
+    "start": 4781,
+    "end": 4928
+   },
+   {
+    "qid": "multi-第三讲　古代中国-20",
+    "start": 4930,
+    "end": 5053
+   },
+   {
+    "qid": "multi-第三讲　古代中国-21",
+    "start": 5055,
+    "end": 5182
+   },
+   {
+    "qid": "single-第三讲　古代中国-1",
+    "start": 5184,
+    "end": 5287
+   },
+   {
+    "qid": "single-第三讲　古代中国-2",
+    "start": 5289,
+    "end": 5471
+   },
+   {
+    "qid": "single-第三讲　古代中国-3",
+    "start": 5473,
+    "end": 5596
+   },
+   {
+    "qid": "single-第三讲　古代中国-4",
+    "start": 5598,
+    "end": 5773
+   },
+   {
+    "qid": "single-第三讲　古代中国-5",
+    "start": 5775,
+    "end": 5981
+   },
+   {
+    "qid": "single-第三讲　古代中国-6",
+    "start": 5983,
+    "end": 6164
+   },
+   {
+    "qid": "single-第三讲　古代中国-7",
+    "start": 6166,
+    "end": 6258
+   },
+   {
+    "qid": "single-第三讲　古代中国-8",
+    "start": 6260,
+    "end": 6435
+   },
+   {
+    "qid": "single-第三讲　古代中国-9",
+    "start": 6437,
+    "end": 6551
+   },
+   {
+    "qid": "single-第三讲　古代中国-10",
+    "start": 6553,
+    "end": 6663
+   },
+   {
+    "qid": "single-第三讲　古代中国-11",
+    "start": 6665,
+    "end": 6754
+   },
+   {
+    "qid": "single-第三讲　古代中国-12",
+    "start": 6756,
+    "end": 6897
+   },
+   {
+    "qid": "single-第三讲　古代中国-13",
+    "start": 6899,
+    "end": 7018
+   },
+   {
+    "qid": "single-第三讲　古代中国-14",
+    "start": 7020,
+    "end": 7149
+   },
+   {
+    "qid": "single-第三讲　古代中国-15",
+    "start": 7151,
+    "end": 7271
+   },
+   {
+    "qid": "single-第三讲　古代中国-16",
+    "start": 7273,
+    "end": 7406
+   },
+   {
+    "qid": "single-第三讲　古代中国-17",
+    "start": 7408,
+    "end": 7569
+   },
+   {
+    "qid": "single-第三讲　古代中国-18",
+    "start": 7571,
+    "end": 7735
+   },
+   {
+    "qid": "single-第三讲　古代中国-19",
+    "start": 7737,
+    "end": 7856
+   },
+   {
+    "qid": "single-第三讲　古代中国-20",
+    "start": 7858,
+    "end": 7940
+   },
+   {
+    "qid": "single-第三讲　古代中国-21",
+    "start": 7942,
+    "end": 8089
+   },
+   {
+    "qid": "single-第三讲　古代中国-22",
+    "start": 8091,
+    "end": 8188
+   },
+   {
+    "qid": "single-第三讲　古代中国-23",
+    "start": 8190,
+    "end": 8296
+   },
+   {
+    "qid": "single-第三讲　古代中国-24",
+    "start": 8298,
+    "end": 8400
+   },
+   {
+    "qid": "single-第三讲　古代中国-25",
+    "start": 8402,
+    "end": 8519
+   }
+  ],
+  "chars": 8519
+ },
+ "第四讲": {
+  "lecture": "第四讲",
+  "file": "第四讲.txt",
+  "qids": [
+   "judge-第四讲-1",
+   "judge-第四讲-2",
+   "judge-第四讲-3",
+   "judge-第四讲-4",
+   "judge-第四讲-5",
+   "judge-第四讲-6",
+   "judge-第四讲-7",
+   "judge-第四讲-8",
+   "judge-第四讲-9",
+   "judge-第四讲-10",
+   "judge-第四讲-11",
+   "judge-第四讲-12",
+   "judge-第四讲-13",
+   "judge-第四讲-14",
+   "judge-第四讲-15",
+   "judge-第四讲-16",
+   "judge-第四讲-17",
+   "judge-第四讲-18",
+   "judge-第四讲-19",
+   "judge-第四讲-20",
+   "multi-第四讲-1",
+   "multi-第四讲-2",
+   "multi-第四讲-3",
+   "multi-第四讲-4",
+   "multi-第四讲-5",
+   "multi-第四讲-6",
+   "multi-第四讲-7",
+   "multi-第四讲-8",
+   "multi-第四讲-9",
+   "multi-第四讲-10",
+   "multi-第四讲-11",
+   "multi-第四讲-12",
+   "multi-第四讲-13",
+   "multi-第四讲-14",
+   "multi-第四讲-15",
+   "multi-第四讲-16",
+   "multi-第四讲-17",
+   "multi-第四讲-18",
+   "multi-第四讲-19",
+   "multi-第四讲-20",
+   "multi-第四讲-21",
+   "multi-第四讲-22",
+   "single-第四讲-1",
+   "single-第四讲-2",
+   "single-第四讲-3",
+   "single-第四讲-4",
+   "single-第四讲-5",
+   "single-第四讲-6",
+   "single-第四讲-7",
+   "single-第四讲-8",
+   "single-第四讲-9",
+   "single-第四讲-10",
+   "single-第四讲-11",
+   "single-第四讲-12",
+   "single-第四讲-13",
+   "single-第四讲-14",
+   "single-第四讲-15"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第四讲-1",
+    "start": 0,
+    "end": 103
+   },
+   {
+    "qid": "judge-第四讲-2",
+    "start": 105,
+    "end": 189
+   },
+   {
+    "qid": "judge-第四讲-3",
+    "start": 191,
+    "end": 303
+   },
+   {
+    "qid": "judge-第四讲-4",
+    "start": 305,
+    "end": 414
+   },
+   {
+    "qid": "judge-第四讲-5",
+    "start": 416,
+    "end": 515
+   },
+   {
+    "qid": "judge-第四讲-6",
+    "start": 517,
+    "end": 632
+   },
+   {
+    "qid": "judge-第四讲-7",
+    "start": 634,
+    "end": 744
+   },
+   {
+    "qid": "judge-第四讲-8",
+    "start": 746,
+    "end": 828
+   },
+   {
+    "qid": "judge-第四讲-9",
+    "start": 830,
+    "end": 893
+   },
+   {
+    "qid": "judge-第四讲-10",
+    "start": 895,
+    "end": 961
+   },
+   {
+    "qid": "judge-第四讲-11",
+    "start": 963,
+    "end": 1022
+   },
+   {
+    "qid": "judge-第四讲-12",
+    "start": 1024,
+    "end": 1086
+   },
+   {
+    "qid": "judge-第四讲-13",
+    "start": 1088,
+    "end": 1153
+   },
+   {
+    "qid": "judge-第四讲-14",
+    "start": 1155,
+    "end": 1219
+   },
+   {
+    "qid": "judge-第四讲-15",
+    "start": 1221,
+    "end": 1304
+   },
+   {
+    "qid": "judge-第四讲-16",
+    "start": 1306,
+    "end": 1353
+   },
+   {
+    "qid": "judge-第四讲-17",
+    "start": 1355,
+    "end": 1414
+   },
+   {
+    "qid": "judge-第四讲-18",
+    "start": 1416,
+    "end": 1514
+   },
+   {
+    "qid": "judge-第四讲-19",
+    "start": 1516,
+    "end": 1618
+   },
+   {
+    "qid": "judge-第四讲-20",
+    "start": 1620,
+    "end": 1709
+   },
+   {
+    "qid": "multi-第四讲-1",
+    "start": 1711,
+    "end": 1859
+   },
+   {
+    "qid": "multi-第四讲-2",
+    "start": 1861,
+    "end": 2066
+   },
+   {
+    "qid": "multi-第四讲-3",
+    "start": 2068,
+    "end": 2238
+   },
+   {
+    "qid": "multi-第四讲-4",
+    "start": 2240,
+    "end": 2413
+   },
+   {
+    "qid": "multi-第四讲-5",
+    "start": 2415,
+    "end": 2603
+   },
+   {
+    "qid": "multi-第四讲-6",
+    "start": 2605,
+    "end": 2764
+   },
+   {
+    "qid": "multi-第四讲-7",
+    "start": 2766,
+    "end": 2934
+   },
+   {
+    "qid": "multi-第四讲-8",
+    "start": 2936,
+    "end": 3096
+   },
+   {
+    "qid": "multi-第四讲-9",
+    "start": 3098,
+    "end": 3228
+   },
+   {
+    "qid": "multi-第四讲-10",
+    "start": 3230,
+    "end": 3338
+   },
+   {
+    "qid": "multi-第四讲-11",
+    "start": 3340,
+    "end": 3488
+   },
+   {
+    "qid": "multi-第四讲-12",
+    "start": 3490,
+    "end": 3602
+   },
+   {
+    "qid": "multi-第四讲-13",
+    "start": 3604,
+    "end": 3738
+   },
+   {
+    "qid": "multi-第四讲-14",
+    "start": 3740,
+    "end": 3843
+   },
+   {
+    "qid": "multi-第四讲-15",
+    "start": 3845,
+    "end": 3959
+   },
+   {
+    "qid": "multi-第四讲-16",
+    "start": 3961,
+    "end": 4131
+   },
+   {
+    "qid": "multi-第四讲-17",
+    "start": 4133,
+    "end": 4238
+   },
+   {
+    "qid": "multi-第四讲-18",
+    "start": 4240,
+    "end": 4397
+   },
+   {
+    "qid": "multi-第四讲-19",
+    "start": 4399,
+    "end": 4571
+   },
+   {
+    "qid": "multi-第四讲-20",
+    "start": 4573,
+    "end": 4710
+   },
+   {
+    "qid": "multi-第四讲-21",
+    "start": 4712,
+    "end": 4910
+   },
+   {
+    "qid": "multi-第四讲-22",
+    "start": 4912,
+    "end": 5077
+   },
+   {
+    "qid": "single-第四讲-1",
+    "start": 5079,
+    "end": 5177
+   },
+   {
+    "qid": "single-第四讲-2",
+    "start": 5179,
+    "end": 5332
+   },
+   {
+    "qid": "single-第四讲-3",
+    "start": 5334,
+    "end": 5448
+   },
+   {
+    "qid": "single-第四讲-4",
+    "start": 5450,
+    "end": 5596
+   },
+   {
+    "qid": "single-第四讲-5",
+    "start": 5598,
+    "end": 5737
+   },
+   {
+    "qid": "single-第四讲-6",
+    "start": 5739,
+    "end": 5884
+   },
+   {
+    "qid": "single-第四讲-7",
+    "start": 5886,
+    "end": 5993
+   },
+   {
+    "qid": "single-第四讲-8",
+    "start": 5995,
+    "end": 6122
+   },
+   {
+    "qid": "single-第四讲-9",
+    "start": 6124,
+    "end": 6266
+   },
+   {
+    "qid": "single-第四讲-10",
+    "start": 6268,
+    "end": 6386
+   },
+   {
+    "qid": "single-第四讲-11",
+    "start": 6388,
+    "end": 6506
+   },
+   {
+    "qid": "single-第四讲-12",
+    "start": 6508,
+    "end": 6634
+   },
+   {
+    "qid": "single-第四讲-13",
+    "start": 6636,
+    "end": 6763
+   },
+   {
+    "qid": "single-第四讲-14",
+    "start": 6765,
+    "end": 6899
+   },
+   {
+    "qid": "single-第四讲-15",
+    "start": 6901,
+    "end": 7015
+   }
+  ],
+  "chars": 7015
+ },
+ "第五讲": {
+  "lecture": "第五讲",
+  "file": "第五讲.txt",
+  "qids": [
+   "judge-第五讲-1",
+   "judge-第五讲-2",
+   "judge-第五讲-3",
+   "judge-第五讲-4",
+   "judge-第五讲-5",
+   "judge-第五讲-6",
+   "judge-第五讲-7",
+   "judge-第五讲-8",
+   "judge-第五讲-9",
+   "judge-第五讲-10",
+   "judge-第五讲-11",
+   "judge-第五讲-12",
+   "judge-第五讲-13",
+   "judge-第五讲-14",
+   "judge-第五讲-15",
+   "judge-第五讲-16",
+   "judge-第五讲-17",
+   "multi-第五讲-1",
+   "multi-第五讲-2",
+   "multi-第五讲-3",
+   "multi-第五讲-4",
+   "multi-第五讲-5",
+   "multi-第五讲-6",
+   "multi-第五讲-7",
+   "multi-第五讲-8",
+   "multi-第五讲-9",
+   "multi-第五讲-10",
+   "multi-第五讲-11",
+   "multi-第五讲-12",
+   "multi-第五讲-13",
+   "multi-第五讲-14",
+   "multi-第五讲-15",
+   "multi-第五讲-16",
+   "multi-第五讲-17",
+   "multi-第五讲-18",
+   "single-第五讲-1",
+   "single-第五讲-2",
+   "single-第五讲-3",
+   "single-第五讲-4",
+   "single-第五讲-5",
+   "single-第五讲-6",
+   "single-第五讲-7",
+   "single-第五讲-8",
+   "single-第五讲-9",
+   "single-第五讲-10",
+   "single-第五讲-11",
+   "single-第五讲-12",
+   "single-第五讲-13",
+   "single-第五讲-14",
+   "single-第五讲-15",
+   "single-第五讲-16",
+   "single-第五讲-17",
+   "single-第五讲-18",
+   "single-第五讲-19",
+   "single-第五讲-20",
+   "single-第五讲-21",
+   "single-第五讲-22"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第五讲-1",
+    "start": 0,
+    "end": 75
+   },
+   {
+    "qid": "judge-第五讲-2",
+    "start": 77,
+    "end": 168
+   },
+   {
+    "qid": "judge-第五讲-3",
+    "start": 170,
+    "end": 273
+   },
+   {
+    "qid": "judge-第五讲-4",
+    "start": 275,
+    "end": 332
+   },
+   {
+    "qid": "judge-第五讲-5",
+    "start": 334,
+    "end": 405
+   },
+   {
+    "qid": "judge-第五讲-6",
+    "start": 407,
+    "end": 453
+   },
+   {
+    "qid": "judge-第五讲-7",
+    "start": 455,
+    "end": 527
+   },
+   {
+    "qid": "judge-第五讲-8",
+    "start": 529,
+    "end": 606
+   },
+   {
+    "qid": "judge-第五讲-9",
+    "start": 608,
+    "end": 677
+   },
+   {
+    "qid": "judge-第五讲-10",
+    "start": 679,
+    "end": 789
+   },
+   {
+    "qid": "judge-第五讲-11",
+    "start": 791,
+    "end": 849
+   },
+   {
+    "qid": "judge-第五讲-12",
+    "start": 851,
+    "end": 924
+   },
+   {
+    "qid": "judge-第五讲-13",
+    "start": 926,
+    "end": 1046
+   },
+   {
+    "qid": "judge-第五讲-14",
+    "start": 1048,
+    "end": 1122
+   },
+   {
+    "qid": "judge-第五讲-15",
+    "start": 1124,
+    "end": 1219
+   },
+   {
+    "qid": "judge-第五讲-16",
+    "start": 1221,
+    "end": 1298
+   },
+   {
+    "qid": "judge-第五讲-17",
+    "start": 1300,
+    "end": 1405
+   },
+   {
+    "qid": "multi-第五讲-1",
+    "start": 1407,
+    "end": 1542
+   },
+   {
+    "qid": "multi-第五讲-2",
+    "start": 1544,
+    "end": 1646
+   },
+   {
+    "qid": "multi-第五讲-3",
+    "start": 1648,
+    "end": 1761
+   },
+   {
+    "qid": "multi-第五讲-4",
+    "start": 1763,
+    "end": 1944
+   },
+   {
+    "qid": "multi-第五讲-5",
+    "start": 1946,
+    "end": 2066
+   },
+   {
+    "qid": "multi-第五讲-6",
+    "start": 2068,
+    "end": 2287
+   },
+   {
+    "qid": "multi-第五讲-7",
+    "start": 2289,
+    "end": 2729
+   },
+   {
+    "qid": "multi-第五讲-8",
+    "start": 2731,
+    "end": 2879
+   },
+   {
+    "qid": "multi-第五讲-9",
+    "start": 2881,
+    "end": 3028
+   },
+   {
+    "qid": "multi-第五讲-10",
+    "start": 3030,
+    "end": 3167
+   },
+   {
+    "qid": "multi-第五讲-11",
+    "start": 3169,
+    "end": 3286
+   },
+   {
+    "qid": "multi-第五讲-12",
+    "start": 3288,
+    "end": 3806
+   },
+   {
+    "qid": "multi-第五讲-13",
+    "start": 3808,
+    "end": 3941
+   },
+   {
+    "qid": "multi-第五讲-14",
+    "start": 3943,
+    "end": 4068
+   },
+   {
+    "qid": "multi-第五讲-15",
+    "start": 4070,
+    "end": 4249
+   },
+   {
+    "qid": "multi-第五讲-16",
+    "start": 4251,
+    "end": 4399
+   },
+   {
+    "qid": "multi-第五讲-17",
+    "start": 4401,
+    "end": 4520
+   },
+   {
+    "qid": "multi-第五讲-18",
+    "start": 4522,
+    "end": 4622
+   },
+   {
+    "qid": "single-第五讲-1",
+    "start": 4624,
+    "end": 4726
+   },
+   {
+    "qid": "single-第五讲-2",
+    "start": 4728,
+    "end": 4852
+   },
+   {
+    "qid": "single-第五讲-3",
+    "start": 4854,
+    "end": 4958
+   },
+   {
+    "qid": "single-第五讲-4",
+    "start": 4960,
+    "end": 5104
+   },
+   {
+    "qid": "single-第五讲-5",
+    "start": 5106,
+    "end": 5291
+   },
+   {
+    "qid": "single-第五讲-6",
+    "start": 5293,
+    "end": 5426
+   },
+   {
+    "qid": "single-第五讲-7",
+    "start": 5428,
+    "end": 5581
+   },
+   {
+    "qid": "single-第五讲-8",
+    "start": 5583,
+    "end": 5749
+   },
+   {
+    "qid": "single-第五讲-9",
+    "start": 5751,
+    "end": 5868
+   },
+   {
+    "qid": "single-第五讲-10",
+    "start": 5870,
+    "end": 6015
+   },
+   {
+    "qid": "single-第五讲-11",
+    "start": 6017,
+    "end": 6157
+   },
+   {
+    "qid": "single-第五讲-12",
+    "start": 6159,
+    "end": 6273
+   },
+   {
+    "qid": "single-第五讲-13",
+    "start": 6275,
+    "end": 6365
+   },
+   {
+    "qid": "single-第五讲-14",
+    "start": 6367,
+    "end": 6498
+   },
+   {
+    "qid": "single-第五讲-15",
+    "start": 6500,
+    "end": 6622
+   },
+   {
+    "qid": "single-第五讲-16",
+    "start": 6624,
+    "end": 6755
+   },
+   {
+    "qid": "single-第五讲-17",
+    "start": 6757,
+    "end": 6867
+   },
+   {
+    "qid": "single-第五讲-18",
+    "start": 6869,
+    "end": 6961
+   },
+   {
+    "qid": "single-第五讲-19",
+    "start": 6963,
+    "end": 7065
+   },
+   {
+    "qid": "single-第五讲-20",
+    "start": 7067,
+    "end": 7154
+   },
+   {
+    "qid": "single-第五讲-21",
+    "start": 7156,
+    "end": 7282
+   },
+   {
+    "qid": "single-第五讲-22",
+    "start": 7284,
+    "end": 7377
+   }
+  ],
+  "chars": 7377
+ },
+ "第六讲": {
+  "lecture": "第六讲",
+  "file": "第六讲.txt",
+  "qids": [
+   "judge-第六讲-1",
+   "judge-第六讲-2",
+   "judge-第六讲-3",
+   "judge-第六讲-4",
+   "judge-第六讲-5",
+   "judge-第六讲-6",
+   "judge-第六讲-7",
+   "judge-第六讲-8",
+   "judge-第六讲-9",
+   "judge-第六讲-10",
+   "judge-第六讲-11",
+   "judge-第六讲-12",
+   "judge-第六讲-13",
+   "judge-第六讲-14",
+   "judge-第六讲-15",
+   "judge-第六讲-16",
+   "judge-第六讲-17",
+   "judge-第六讲-18",
+   "judge-第六讲-19",
+   "judge-第六讲-20",
+   "judge-第六讲-21",
+   "judge-第六讲-22",
+   "judge-第六讲-23",
+   "judge-第六讲-24",
+   "judge-第六讲-25",
+   "judge-第六讲-26",
+   "judge-第六讲-27",
+   "judge-第六讲-28",
+   "multi-第六讲-1",
+   "multi-第六讲-2",
+   "multi-第六讲-3",
+   "multi-第六讲-4",
+   "multi-第六讲-5",
+   "multi-第六讲-6",
+   "multi-第六讲-7",
+   "multi-第六讲-8",
+   "multi-第六讲-9",
+   "multi-第六讲-10",
+   "multi-第六讲-11",
+   "multi-第六讲-12",
+   "multi-第六讲-13",
+   "multi-第六讲-14",
+   "multi-第六讲-15",
+   "multi-第六讲-16",
+   "multi-第六讲-17",
+   "multi-第六讲-18",
+   "multi-第六讲-19",
+   "multi-第六讲-20",
+   "multi-第六讲-21",
+   "multi-第六讲-22",
+   "multi-第六讲-23",
+   "multi-第六讲-24",
+   "multi-第六讲-25",
+   "multi-第六讲-26",
+   "multi-第六讲-27",
+   "multi-第六讲-28",
+   "single-第六讲-1",
+   "single-第六讲-2",
+   "single-第六讲-3",
+   "single-第六讲-4",
+   "single-第六讲-5",
+   "single-第六讲-6",
+   "single-第六讲-7",
+   "single-第六讲-8",
+   "single-第六讲-9",
+   "single-第六讲-10",
+   "single-第六讲-11",
+   "single-第六讲-12",
+   "single-第六讲-13",
+   "single-第六讲-14",
+   "single-第六讲-15",
+   "single-第六讲-16"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第六讲-1",
+    "start": 0,
+    "end": 74
+   },
+   {
+    "qid": "judge-第六讲-2",
+    "start": 76,
+    "end": 148
+   },
+   {
+    "qid": "judge-第六讲-3",
+    "start": 150,
+    "end": 222
+   },
+   {
+    "qid": "judge-第六讲-4",
+    "start": 224,
+    "end": 306
+   },
+   {
+    "qid": "judge-第六讲-5",
+    "start": 308,
+    "end": 390
+   },
+   {
+    "qid": "judge-第六讲-6",
+    "start": 392,
+    "end": 467
+   },
+   {
+    "qid": "judge-第六讲-7",
+    "start": 469,
+    "end": 543
+   },
+   {
+    "qid": "judge-第六讲-8",
+    "start": 545,
+    "end": 620
+   },
+   {
+    "qid": "judge-第六讲-9",
+    "start": 622,
+    "end": 725
+   },
+   {
+    "qid": "judge-第六讲-10",
+    "start": 727,
+    "end": 819
+   },
+   {
+    "qid": "judge-第六讲-11",
+    "start": 821,
+    "end": 898
+   },
+   {
+    "qid": "judge-第六讲-12",
+    "start": 900,
+    "end": 975
+   },
+   {
+    "qid": "judge-第六讲-13",
+    "start": 977,
+    "end": 1052
+   },
+   {
+    "qid": "judge-第六讲-14",
+    "start": 1054,
+    "end": 1137
+   },
+   {
+    "qid": "judge-第六讲-15",
+    "start": 1139,
+    "end": 1211
+   },
+   {
+    "qid": "judge-第六讲-16",
+    "start": 1213,
+    "end": 1267
+   },
+   {
+    "qid": "judge-第六讲-17",
+    "start": 1269,
+    "end": 1318
+   },
+   {
+    "qid": "judge-第六讲-18",
+    "start": 1320,
+    "end": 1408
+   },
+   {
+    "qid": "judge-第六讲-19",
+    "start": 1410,
+    "end": 1513
+   },
+   {
+    "qid": "judge-第六讲-20",
+    "start": 1515,
+    "end": 1596
+   },
+   {
+    "qid": "judge-第六讲-21",
+    "start": 1598,
+    "end": 1678
+   },
+   {
+    "qid": "judge-第六讲-22",
+    "start": 1680,
+    "end": 1781
+   },
+   {
+    "qid": "judge-第六讲-23",
+    "start": 1783,
+    "end": 1881
+   },
+   {
+    "qid": "judge-第六讲-24",
+    "start": 1883,
+    "end": 1975
+   },
+   {
+    "qid": "judge-第六讲-25",
+    "start": 1977,
+    "end": 2103
+   },
+   {
+    "qid": "judge-第六讲-26",
+    "start": 2105,
+    "end": 2177
+   },
+   {
+    "qid": "judge-第六讲-27",
+    "start": 2179,
+    "end": 2256
+   },
+   {
+    "qid": "judge-第六讲-28",
+    "start": 2258,
+    "end": 2382
+   },
+   {
+    "qid": "multi-第六讲-1",
+    "start": 2384,
+    "end": 2496
+   },
+   {
+    "qid": "multi-第六讲-2",
+    "start": 2498,
+    "end": 2657
+   },
+   {
+    "qid": "multi-第六讲-3",
+    "start": 2659,
+    "end": 2832
+   },
+   {
+    "qid": "multi-第六讲-4",
+    "start": 2834,
+    "end": 2961
+   },
+   {
+    "qid": "multi-第六讲-5",
+    "start": 2963,
+    "end": 3087
+   },
+   {
+    "qid": "multi-第六讲-6",
+    "start": 3089,
+    "end": 3293
+   },
+   {
+    "qid": "multi-第六讲-7",
+    "start": 3295,
+    "end": 3472
+   },
+   {
+    "qid": "multi-第六讲-8",
+    "start": 3474,
+    "end": 3584
+   },
+   {
+    "qid": "multi-第六讲-9",
+    "start": 3586,
+    "end": 3710
+   },
+   {
+    "qid": "multi-第六讲-10",
+    "start": 3712,
+    "end": 3849
+   },
+   {
+    "qid": "multi-第六讲-11",
+    "start": 3851,
+    "end": 4017
+   },
+   {
+    "qid": "multi-第六讲-12",
+    "start": 4019,
+    "end": 4108
+   },
+   {
+    "qid": "multi-第六讲-13",
+    "start": 4110,
+    "end": 4307
+   },
+   {
+    "qid": "multi-第六讲-14",
+    "start": 4309,
+    "end": 4524
+   },
+   {
+    "qid": "multi-第六讲-15",
+    "start": 4526,
+    "end": 4692
+   },
+   {
+    "qid": "multi-第六讲-16",
+    "start": 4694,
+    "end": 4784
+   },
+   {
+    "qid": "multi-第六讲-17",
+    "start": 4786,
+    "end": 4969
+   },
+   {
+    "qid": "multi-第六讲-18",
+    "start": 4971,
+    "end": 5090
+   },
+   {
+    "qid": "multi-第六讲-19",
+    "start": 5092,
+    "end": 5307
+   },
+   {
+    "qid": "multi-第六讲-20",
+    "start": 5309,
+    "end": 5428
+   },
+   {
+    "qid": "multi-第六讲-21",
+    "start": 5430,
+    "end": 5647
+   },
+   {
+    "qid": "multi-第六讲-22",
+    "start": 5649,
+    "end": 5764
+   },
+   {
+    "qid": "multi-第六讲-23",
+    "start": 5766,
+    "end": 5942
+   },
+   {
+    "qid": "multi-第六讲-24",
+    "start": 5944,
+    "end": 6072
+   },
+   {
+    "qid": "multi-第六讲-25",
+    "start": 6074,
+    "end": 6231
+   },
+   {
+    "qid": "multi-第六讲-26",
+    "start": 6233,
+    "end": 6370
+   },
+   {
+    "qid": "multi-第六讲-27",
+    "start": 6372,
+    "end": 6519
+   },
+   {
+    "qid": "multi-第六讲-28",
+    "start": 6521,
+    "end": 6647
+   },
+   {
+    "qid": "single-第六讲-1",
+    "start": 6649,
+    "end": 6771
+   },
+   {
+    "qid": "single-第六讲-2",
+    "start": 6773,
+    "end": 6878
+   },
+   {
+    "qid": "single-第六讲-3",
+    "start": 6880,
+    "end": 7053
+   },
+   {
+    "qid": "single-第六讲-4",
+    "start": 7055,
+    "end": 7161
+   },
+   {
+    "qid": "single-第六讲-5",
+    "start": 7163,
+    "end": 7295
+   },
+   {
+    "qid": "single-第六讲-6",
+    "start": 7297,
+    "end": 7388
+   },
+   {
+    "qid": "single-第六讲-7",
+    "start": 7390,
+    "end": 7495
+   },
+   {
+    "qid": "single-第六讲-8",
+    "start": 7497,
+    "end": 7631
+   },
+   {
+    "qid": "single-第六讲-9",
+    "start": 7633,
+    "end": 7732
+   },
+   {
+    "qid": "single-第六讲-10",
+    "start": 7734,
+    "end": 7868
+   },
+   {
+    "qid": "single-第六讲-11",
+    "start": 7870,
+    "end": 7967
+   },
+   {
+    "qid": "single-第六讲-12",
+    "start": 7969,
+    "end": 8113
+   },
+   {
+    "qid": "single-第六讲-13",
+    "start": 8115,
+    "end": 8229
+   },
+   {
+    "qid": "single-第六讲-14",
+    "start": 8231,
+    "end": 8325
+   },
+   {
+    "qid": "single-第六讲-15",
+    "start": 8327,
+    "end": 8440
+   },
+   {
+    "qid": "single-第六讲-16",
+    "start": 8442,
+    "end": 8549
+   }
+  ],
+  "chars": 8549
+ },
+ "第七讲_工业革命": {
+  "lecture": "第七讲　工业革命",
+  "file": "第七讲_工业革命.txt",
+  "qids": [
+   "judge-第七讲　工业革命-1",
+   "judge-第七讲　工业革命-2",
+   "judge-第七讲　工业革命-3",
+   "judge-第七讲　工业革命-4",
+   "judge-第七讲　工业革命-5",
+   "judge-第七讲　工业革命-6",
+   "judge-第七讲　工业革命-7",
+   "judge-第七讲　工业革命-8",
+   "judge-第七讲　工业革命-9",
+   "judge-第七讲　工业革命-10",
+   "judge-第七讲　工业革命-11",
+   "judge-第七讲　工业革命-12",
+   "judge-第七讲　工业革命-13",
+   "judge-第七讲　工业革命-14",
+   "judge-第七讲　工业革命-15",
+   "judge-第七讲　工业革命-16",
+   "multi-第七讲　工业革命-1",
+   "multi-第七讲　工业革命-2",
+   "multi-第七讲　工业革命-3",
+   "multi-第七讲　工业革命-4",
+   "multi-第七讲　工业革命-5",
+   "multi-第七讲　工业革命-6",
+   "multi-第七讲　工业革命-7",
+   "multi-第七讲　工业革命-8",
+   "multi-第七讲　工业革命-9",
+   "multi-第七讲　工业革命-10",
+   "multi-第七讲　工业革命-11",
+   "multi-第七讲　工业革命-12",
+   "multi-第七讲　工业革命-13",
+   "multi-第七讲　工业革命-14",
+   "multi-第七讲　工业革命-15",
+   "multi-第七讲　工业革命-16",
+   "multi-第七讲　工业革命-17",
+   "single-第七讲　工业革命-1",
+   "single-第七讲　工业革命-2",
+   "single-第七讲　工业革命-3",
+   "single-第七讲　工业革命-4",
+   "single-第七讲　工业革命-5",
+   "single-第七讲　工业革命-6",
+   "single-第七讲　工业革命-7",
+   "single-第七讲　工业革命-8",
+   "single-第七讲　工业革命-9",
+   "single-第七讲　工业革命-10",
+   "single-第七讲　工业革命-11",
+   "single-第七讲　工业革命-12",
+   "single-第七讲　工业革命-13",
+   "single-第七讲　工业革命-14",
+   "single-第七讲　工业革命-15",
+   "single-第七讲　工业革命-16",
+   "single-第七讲　工业革命-17"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第七讲　工业革命-1",
+    "start": 0,
+    "end": 63
+   },
+   {
+    "qid": "judge-第七讲　工业革命-2",
+    "start": 65,
+    "end": 151
+   },
+   {
+    "qid": "judge-第七讲　工业革命-3",
+    "start": 153,
+    "end": 234
+   },
+   {
+    "qid": "judge-第七讲　工业革命-4",
+    "start": 236,
+    "end": 315
+   },
+   {
+    "qid": "judge-第七讲　工业革命-5",
+    "start": 317,
+    "end": 447
+   },
+   {
+    "qid": "judge-第七讲　工业革命-6",
+    "start": 449,
+    "end": 552
+   },
+   {
+    "qid": "judge-第七讲　工业革命-7",
+    "start": 554,
+    "end": 614
+   },
+   {
+    "qid": "judge-第七讲　工业革命-8",
+    "start": 616,
+    "end": 686
+   },
+   {
+    "qid": "judge-第七讲　工业革命-9",
+    "start": 688,
+    "end": 822
+   },
+   {
+    "qid": "judge-第七讲　工业革命-10",
+    "start": 824,
+    "end": 922
+   },
+   {
+    "qid": "judge-第七讲　工业革命-11",
+    "start": 924,
+    "end": 1029
+   },
+   {
+    "qid": "judge-第七讲　工业革命-12",
+    "start": 1031,
+    "end": 1104
+   },
+   {
+    "qid": "judge-第七讲　工业革命-13",
+    "start": 1106,
+    "end": 1185
+   },
+   {
+    "qid": "judge-第七讲　工业革命-14",
+    "start": 1187,
+    "end": 1255
+   },
+   {
+    "qid": "judge-第七讲　工业革命-15",
+    "start": 1257,
+    "end": 1351
+   },
+   {
+    "qid": "judge-第七讲　工业革命-16",
+    "start": 1353,
+    "end": 1418
+   },
+   {
+    "qid": "multi-第七讲　工业革命-1",
+    "start": 1420,
+    "end": 1510
+   },
+   {
+    "qid": "multi-第七讲　工业革命-2",
+    "start": 1512,
+    "end": 1636
+   },
+   {
+    "qid": "multi-第七讲　工业革命-3",
+    "start": 1638,
+    "end": 1796
+   },
+   {
+    "qid": "multi-第七讲　工业革命-4",
+    "start": 1798,
+    "end": 1967
+   },
+   {
+    "qid": "multi-第七讲　工业革命-5",
+    "start": 1969,
+    "end": 2076
+   },
+   {
+    "qid": "multi-第七讲　工业革命-6",
+    "start": 2078,
+    "end": 2200
+   },
+   {
+    "qid": "multi-第七讲　工业革命-7",
+    "start": 2202,
+    "end": 2354
+   },
+   {
+    "qid": "multi-第七讲　工业革命-8",
+    "start": 2356,
+    "end": 2720
+   },
+   {
+    "qid": "multi-第七讲　工业革命-9",
+    "start": 2722,
+    "end": 3043
+   },
+   {
+    "qid": "multi-第七讲　工业革命-10",
+    "start": 3045,
+    "end": 3307
+   },
+   {
+    "qid": "multi-第七讲　工业革命-11",
+    "start": 3309,
+    "end": 3641
+   },
+   {
+    "qid": "multi-第七讲　工业革命-12",
+    "start": 3643,
+    "end": 3835
+   },
+   {
+    "qid": "multi-第七讲　工业革命-13",
+    "start": 3837,
+    "end": 4032
+   },
+   {
+    "qid": "multi-第七讲　工业革命-14",
+    "start": 4034,
+    "end": 4385
+   },
+   {
+    "qid": "multi-第七讲　工业革命-15",
+    "start": 4387,
+    "end": 4667
+   },
+   {
+    "qid": "multi-第七讲　工业革命-16",
+    "start": 4669,
+    "end": 5111
+   },
+   {
+    "qid": "multi-第七讲　工业革命-17",
+    "start": 5113,
+    "end": 5484
+   },
+   {
+    "qid": "single-第七讲　工业革命-1",
+    "start": 5486,
+    "end": 5560
+   },
+   {
+    "qid": "single-第七讲　工业革命-2",
+    "start": 5562,
+    "end": 5684
+   },
+   {
+    "qid": "single-第七讲　工业革命-3",
+    "start": 5686,
+    "end": 5795
+   },
+   {
+    "qid": "single-第七讲　工业革命-4",
+    "start": 5797,
+    "end": 5893
+   },
+   {
+    "qid": "single-第七讲　工业革命-5",
+    "start": 5895,
+    "end": 5994
+   },
+   {
+    "qid": "single-第七讲　工业革命-6",
+    "start": 5996,
+    "end": 6115
+   },
+   {
+    "qid": "single-第七讲　工业革命-7",
+    "start": 6117,
+    "end": 6241
+   },
+   {
+    "qid": "single-第七讲　工业革命-8",
+    "start": 6243,
+    "end": 6376
+   },
+   {
+    "qid": "single-第七讲　工业革命-9",
+    "start": 6378,
+    "end": 6494
+   },
+   {
+    "qid": "single-第七讲　工业革命-10",
+    "start": 6496,
+    "end": 6625
+   },
+   {
+    "qid": "single-第七讲　工业革命-11",
+    "start": 6627,
+    "end": 6751
+   },
+   {
+    "qid": "single-第七讲　工业革命-12",
+    "start": 6753,
+    "end": 6897
+   },
+   {
+    "qid": "single-第七讲　工业革命-13",
+    "start": 6899,
+    "end": 7033
+   },
+   {
+    "qid": "single-第七讲　工业革命-14",
+    "start": 7035,
+    "end": 7145
+   },
+   {
+    "qid": "single-第七讲　工业革命-15",
+    "start": 7147,
+    "end": 7259
+   },
+   {
+    "qid": "single-第七讲　工业革命-16",
+    "start": 7261,
+    "end": 7418
+   },
+   {
+    "qid": "single-第七讲　工业革命-17",
+    "start": 7420,
+    "end": 7557
+   }
+  ],
+  "chars": 7557
+ },
+ "第八讲": {
+  "lecture": "第八讲",
+  "file": "第八讲.txt",
+  "qids": [
+   "judge-第八讲-1",
+   "judge-第八讲-2",
+   "judge-第八讲-3",
+   "judge-第八讲-4",
+   "judge-第八讲-5",
+   "judge-第八讲-6",
+   "judge-第八讲-7",
+   "judge-第八讲-8",
+   "judge-第八讲-9",
+   "judge-第八讲-10",
+   "judge-第八讲-11",
+   "judge-第八讲-12",
+   "judge-第八讲-13",
+   "judge-第八讲-14",
+   "multi-第八讲-1",
+   "multi-第八讲-2",
+   "multi-第八讲-3",
+   "multi-第八讲-4",
+   "multi-第八讲-5",
+   "multi-第八讲-6",
+   "multi-第八讲-7",
+   "multi-第八讲-8",
+   "multi-第八讲-9",
+   "single-第八讲-1",
+   "single-第八讲-2",
+   "single-第八讲-3",
+   "single-第八讲-4",
+   "single-第八讲-5",
+   "single-第八讲-6",
+   "single-第八讲-7",
+   "single-第八讲-8",
+   "single-第八讲-9",
+   "single-第八讲-10",
+   "single-第八讲-11"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第八讲-1",
+    "start": 0,
+    "end": 72
+   },
+   {
+    "qid": "judge-第八讲-2",
+    "start": 74,
+    "end": 143
+   },
+   {
+    "qid": "judge-第八讲-3",
+    "start": 145,
+    "end": 272
+   },
+   {
+    "qid": "judge-第八讲-4",
+    "start": 274,
+    "end": 371
+   },
+   {
+    "qid": "judge-第八讲-5",
+    "start": 373,
+    "end": 481
+   },
+   {
+    "qid": "judge-第八讲-6",
+    "start": 483,
+    "end": 555
+   },
+   {
+    "qid": "judge-第八讲-7",
+    "start": 557,
+    "end": 629
+   },
+   {
+    "qid": "judge-第八讲-8",
+    "start": 631,
+    "end": 683
+   },
+   {
+    "qid": "judge-第八讲-9",
+    "start": 685,
+    "end": 743
+   },
+   {
+    "qid": "judge-第八讲-10",
+    "start": 745,
+    "end": 805
+   },
+   {
+    "qid": "judge-第八讲-11",
+    "start": 807,
+    "end": 877
+   },
+   {
+    "qid": "judge-第八讲-12",
+    "start": 879,
+    "end": 946
+   },
+   {
+    "qid": "judge-第八讲-13",
+    "start": 948,
+    "end": 1011
+   },
+   {
+    "qid": "judge-第八讲-14",
+    "start": 1013,
+    "end": 1146
+   },
+   {
+    "qid": "multi-第八讲-1",
+    "start": 1148,
+    "end": 1289
+   },
+   {
+    "qid": "multi-第八讲-2",
+    "start": 1291,
+    "end": 1433
+   },
+   {
+    "qid": "multi-第八讲-3",
+    "start": 1435,
+    "end": 1602
+   },
+   {
+    "qid": "multi-第八讲-4",
+    "start": 1604,
+    "end": 1773
+   },
+   {
+    "qid": "multi-第八讲-5",
+    "start": 1775,
+    "end": 1891
+   },
+   {
+    "qid": "multi-第八讲-6",
+    "start": 1893,
+    "end": 2089
+   },
+   {
+    "qid": "multi-第八讲-7",
+    "start": 2091,
+    "end": 2231
+   },
+   {
+    "qid": "multi-第八讲-8",
+    "start": 2233,
+    "end": 2387
+   },
+   {
+    "qid": "multi-第八讲-9",
+    "start": 2389,
+    "end": 2536
+   },
+   {
+    "qid": "single-第八讲-1",
+    "start": 2538,
+    "end": 2647
+   },
+   {
+    "qid": "single-第八讲-2",
+    "start": 2649,
+    "end": 2745
+   },
+   {
+    "qid": "single-第八讲-3",
+    "start": 2747,
+    "end": 2865
+   },
+   {
+    "qid": "single-第八讲-4",
+    "start": 2867,
+    "end": 2977
+   },
+   {
+    "qid": "single-第八讲-5",
+    "start": 2979,
+    "end": 3086
+   },
+   {
+    "qid": "single-第八讲-6",
+    "start": 3088,
+    "end": 3234
+   },
+   {
+    "qid": "single-第八讲-7",
+    "start": 3236,
+    "end": 3402
+   },
+   {
+    "qid": "single-第八讲-8",
+    "start": 3404,
+    "end": 3538
+   },
+   {
+    "qid": "single-第八讲-9",
+    "start": 3540,
+    "end": 3670
+   },
+   {
+    "qid": "single-第八讲-10",
+    "start": 3672,
+    "end": 3777
+   },
+   {
+    "qid": "single-第八讲-11",
+    "start": 3779,
+    "end": 3916
+   }
+  ],
+  "chars": 3916
+ },
+ "第九讲": {
+  "lecture": "第九讲",
+  "file": "第九讲.txt",
+  "qids": [
+   "judge-第九讲-1",
+   "judge-第九讲-2",
+   "judge-第九讲-3",
+   "judge-第九讲-4",
+   "judge-第九讲-5",
+   "judge-第九讲-6",
+   "judge-第九讲-7",
+   "judge-第九讲-8",
+   "judge-第九讲-9",
+   "judge-第九讲-10",
+   "judge-第九讲-11",
+   "judge-第九讲-12",
+   "judge-第九讲-13",
+   "judge-第九讲-14",
+   "judge-第九讲-15",
+   "judge-第九讲-16",
+   "judge-第九讲-17",
+   "multi-第九讲-1",
+   "multi-第九讲-2",
+   "multi-第九讲-3",
+   "multi-第九讲-4",
+   "multi-第九讲-5",
+   "multi-第九讲-6",
+   "multi-第九讲-7",
+   "multi-第九讲-8",
+   "multi-第九讲-9",
+   "multi-第九讲-10",
+   "multi-第九讲-11",
+   "multi-第九讲-12",
+   "multi-第九讲-13",
+   "multi-第九讲-14",
+   "multi-第九讲-15",
+   "multi-第九讲-16",
+   "multi-第九讲-17",
+   "multi-第九讲-18",
+   "multi-第九讲-19",
+   "multi-第九讲-20",
+   "multi-第九讲-21",
+   "single-第九讲-1",
+   "single-第九讲-2",
+   "single-第九讲-3",
+   "single-第九讲-4",
+   "single-第九讲-5",
+   "single-第九讲-6",
+   "single-第九讲-7",
+   "single-第九讲-8",
+   "single-第九讲-9",
+   "single-第九讲-10",
+   "single-第九讲-11",
+   "single-第九讲-12",
+   "single-第九讲-13",
+   "single-第九讲-14"
+  ],
+  "spans": [
+   {
+    "qid": "judge-第九讲-1",
+    "start": 0,
+    "end": 67
+   },
+   {
+    "qid": "judge-第九讲-2",
+    "start": 69,
+    "end": 133
+   },
+   {
+    "qid": "judge-第九讲-3",
+    "start": 135,
+    "end": 225
+   },
+   {
+    "qid": "judge-第九讲-4",
+    "start": 227,
+    "end": 292
+   },
+   {
+    "qid": "judge-第九讲-5",
+    "start": 294,
+    "end": 366
+   },
+   {
+    "qid": "judge-第九讲-6",
+    "start": 368,
+    "end": 435
+   },
+   {
+    "qid": "judge-第九讲-7",
+    "start": 437,
+    "end": 586
+   },
+   {
+    "qid": "judge-第九讲-8",
+    "start": 588,
+    "end": 670
+   },
+   {
+    "qid": "judge-第九讲-9",
+    "start": 672,
+    "end": 742
+   },
+   {
+    "qid": "judge-第九讲-10",
+    "start": 744,
+    "end": 809
+   },
+   {
+    "qid": "judge-第九讲-11",
+    "start": 811,
+    "end": 877
+   },
+   {
+    "qid": "judge-第九讲-12",
+    "start": 879,
+    "end": 968
+   },
+   {
+    "qid": "judge-第九讲-13",
+    "start": 970,
+    "end": 1034
+   },
+   {
+    "qid": "judge-第九讲-14",
+    "start": 1036,
+    "end": 1214
+   },
+   {
+    "qid": "judge-第九讲-15",
+    "start": 1216,
+    "end": 1301
+   },
+   {
+    "qid": "judge-第九讲-16",
+    "start": 1303,
+    "end": 1396
+   },
+   {
+    "qid": "judge-第九讲-17",
+    "start": 1398,
+    "end": 1552
+   },
+   {
+    "qid": "multi-第九讲-1",
+    "start": 1554,
+    "end": 1720
+   },
+   {
+    "qid": "multi-第九讲-2",
+    "start": 1722,
+    "end": 2071
+   },
+   {
+    "qid": "multi-第九讲-3",
+    "start": 2073,
+    "end": 2473
+   },
+   {
+    "qid": "multi-第九讲-4",
+    "start": 2475,
+    "end": 2732
+   },
+   {
+    "qid": "multi-第九讲-5",
+    "start": 2734,
+    "end": 2825
+   },
+   {
+    "qid": "multi-第九讲-6",
+    "start": 2827,
+    "end": 2982
+   },
+   {
+    "qid": "multi-第九讲-7",
+    "start": 2984,
+    "end": 3088
+   },
+   {
+    "qid": "multi-第九讲-8",
+    "start": 3090,
+    "end": 3377
+   },
+   {
+    "qid": "multi-第九讲-9",
+    "start": 3379,
+    "end": 3491
+   },
+   {
+    "qid": "multi-第九讲-10",
+    "start": 3493,
+    "end": 3649
+   },
+   {
+    "qid": "multi-第九讲-11",
+    "start": 3651,
+    "end": 3884
+   },
+   {
+    "qid": "multi-第九讲-12",
+    "start": 3886,
+    "end": 3994
+   },
+   {
+    "qid": "multi-第九讲-13",
+    "start": 3996,
+    "end": 4194
+   },
+   {
+    "qid": "multi-第九讲-14",
+    "start": 4196,
+    "end": 4399
+   },
+   {
+    "qid": "multi-第九讲-15",
+    "start": 4401,
+    "end": 4511
+   },
+   {
+    "qid": "multi-第九讲-16",
+    "start": 4513,
+    "end": 4851
+   },
+   {
+    "qid": "multi-第九讲-17",
+    "start": 4853,
+    "end": 5159
+   },
+   {
+    "qid": "multi-第九讲-18",
+    "start": 5161,
+    "end": 5372
+   },
+   {
+    "qid": "multi-第九讲-19",
+    "start": 5374,
+    "end": 5506
+   },
+   {
+    "qid": "multi-第九讲-20",
+    "start": 5508,
+    "end": 5879
+   },
+   {
+    "qid": "multi-第九讲-21",
+    "start": 5881,
+    "end": 6009
+   },
+   {
+    "qid": "single-第九讲-1",
+    "start": 6011,
+    "end": 6177
+   },
+   {
+    "qid": "single-第九讲-2",
+    "start": 6179,
+    "end": 6440
+   },
+   {
+    "qid": "single-第九讲-3",
+    "start": 6442,
+    "end": 6562
+   },
+   {
+    "qid": "single-第九讲-4",
+    "start": 6564,
+    "end": 6676
+   },
+   {
+    "qid": "single-第九讲-5",
+    "start": 6678,
+    "end": 6776
+   },
+   {
+    "qid": "single-第九讲-6",
+    "start": 6778,
+    "end": 6941
+   },
+   {
+    "qid": "single-第九讲-7",
+    "start": 6943,
+    "end": 7197
+   },
+   {
+    "qid": "single-第九讲-8",
+    "start": 7199,
+    "end": 7421
+   },
+   {
+    "qid": "single-第九讲-9",
+    "start": 7423,
+    "end": 7582
+   },
+   {
+    "qid": "single-第九讲-10",
+    "start": 7584,
+    "end": 7753
+   },
+   {
+    "qid": "single-第九讲-11",
+    "start": 7755,
+    "end": 7936
+   },
+   {
+    "qid": "single-第九讲-12",
+    "start": 7938,
+    "end": 8096
+   },
+   {
+    "qid": "single-第九讲-13",
+    "start": 8098,
+    "end": 8409
+   },
+   {
+    "qid": "single-第九讲-14",
+    "start": 8411,
+    "end": 8541
+   }
+  ],
+  "chars": 8541
+ }
+}
