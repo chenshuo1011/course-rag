@@ -28,6 +28,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from agent import KB, run
+from doc_ask import DocQA
 from quiz import get_one as quiz_get_one
 from quiz import grade as quiz_grade
 from quiz import pick as quiz_pick
@@ -125,9 +126,18 @@ def _load():
     print(f"就绪：{len(kb.meta)} 道题")
     ip = _lan_ip()
     print()
-    print(f"  本机访问：  http://127.0.0.1:8000/docs")
-    print(f"  局域网访问：http://{ip}:8000/docs   （同一 WiFi 的手机/电脑）")
+    print(f"  答题：  http://127.0.0.1:8000/")
+    print(f"  复习：  http://127.0.0.1:8000/review")
+    print(f"  问答：  http://127.0.0.1:8000/chat")
+    print(f"  教材：  http://127.0.0.1:8000/doc")
+    print(f"  接口：  http://127.0.0.1:8000/docs")
+    print(f"  局域网：http://{ip}:8000   （同一 WiFi 的手机/电脑）")
     print()
+
+    # 教材问答的模型很重（编码 240 块 + 载入 278M 重排模型），放后台加载，
+    # 不阻塞服务启动。加载完再跑一次完整问答，把重排的首次开销（约 5 秒）消化掉。
+    threading.Thread(target=get_docqa, daemon=True).start()
+    print("教材问答模型在后台加载（约 30 秒，首页可用不影响）...")
 
 
 @app.get("/health")
@@ -150,6 +160,12 @@ def index():
 def review_page():
     """错题复习页：列出待复习，就地重练，答对移出。"""
     return _page("review.html")
+
+
+@app.get("/doc", response_class=HTMLResponse)
+def doc_page():
+    """教材问答页：问题 → 答案 + 引用。"""
+    return _page("doc.html")
 
 
 @app.get("/chat", response_class=HTMLResponse)
@@ -322,6 +338,56 @@ def answer_quiz(req: AnswerIn):
     if "error" in r:
         raise HTTPException(status_code=404, detail=r["error"])
     return r
+
+
+# ─────────────────────────── 教材问答（真文档 RAG）───────────────────────────
+#
+# 这条链路和题库那条完全独立：题库是结构化记录，这里是切片 + 向量检索 + 重排。
+# 加载很重（编码 240 块 + 载入 278M 的重排模型，约 30 秒），所以：
+#   1. 懒加载，首个请求时才真正初始化
+#   2. 启动时用后台线程预热，别让第一个用户等 30 秒
+#   3. 预热时顺便跑一次完整问答——重排的首次调用要 5 秒，不能算在用户头上
+
+_docqa: DocQA | None = None
+_docqa_lock = threading.Lock()
+_docqa_ready = threading.Event()
+
+
+def get_docqa() -> DocQA:
+    global _docqa
+    if _docqa is None:
+        with _docqa_lock:
+            if _docqa is None:
+                _docqa = DocQA()
+                # 预热：这次调用把重排模型的首次开销吃掉
+                try:
+                    _docqa.ask("什么是自然辩证法")
+                except Exception as e:
+                    print(f"[docqa] 预热失败：{e}")
+                _docqa_ready.set()
+    return _docqa
+
+
+class DocAskIn(BaseModel):
+    q: str = Field(..., min_length=1, max_length=200)
+
+
+@app.post("/doc/ask")
+def doc_ask(req: DocAskIn):
+    """教材问答：检索 top-10 → 重排 → 取 3 条 → 生成带引用的答案。"""
+    qa = get_docqa()
+    r = qa.ask(req.q)
+
+    top_score = r["citations"][0]["score"] if r["citations"] else 0
+    # 不给硬拒答，只提示。硬拒答会把本来能答的问题挡掉，代价比收益大。
+    r["low_confidence"] = top_score < 0
+    return r
+
+
+@app.get("/doc/status")
+def doc_status():
+    """前端用它判断后台预热完没有。"""
+    return {"ready": _docqa_ready.is_set()}
 
 
 if __name__ == "__main__":

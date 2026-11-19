@@ -78,6 +78,16 @@ class DocQA:
                 break
         return name
 
+    def section_range(self, start: int, end: int) -> str:
+        """块横跨多节时，把起止两节都标出来。
+
+        为什么不能只用起点：500 字的块经常跨节，起点在上一节末尾、
+        正文大部分在下一节。只标起点会说"这段讲的是辩证自然观的作用"，
+        而内容其实在讲系统自然观——用户核对时会以为引错了。
+        """
+        a, b = self.section_of(start), self.section_of(max(start, end - 1))
+        return a if a == b else f"{a} → {b}"
+
     # ── 重排 ──
     def _load_reranker(self):
         if self._model is None:
@@ -117,7 +127,7 @@ class DocQA:
         for n, (ci, sc) in enumerate(zip(picked, scores[:TOP_N]), 1):
             cites.append({
                 "n": n,
-                "section": self.section_of(self.spans[ci][0]),
+                "section": self.section_range(*self.spans[ci]),
                 "snippet": self.chunks[ci][:200],
                 "score": round(sc, 3),
                 "pos": self.spans[ci][0],
