@@ -36,14 +36,25 @@ def load_docs() -> dict:
     return json.loads((DOCS / "_index.json").read_text(encoding="utf-8"))
 
 
-def chunk_text(text: str, size: int, overlap: int) -> list[tuple[int, int]]:
+# 句末标点。换行也算——教材里一个自然段结束时会有换行
+SENT_END = "。！？；\n»”」』）"
+
+
+def chunk_text(text: str, size: int, overlap: int,
+               snap: bool = True, tolerance: float = 0.3) -> list[tuple[int, int]]:
     """按字符数切块，返回 [(start, end), ...]。
 
-    overlap 是相邻两块的重叠字符数——写文章时怕把一句切断，
-    所以让后一块回退一点，重复上一块的结尾。
+    overlap 是相邻两块的重叠字符数——怕把一句切断，所以让后一块回退一点，
+    重复上一块的结尾。
 
-    留给你写：如果不想让块从句子中间开始，可以在 start 附近往后找
-    第一个句号/换行。这一步要不要做，做完对比一下就知道。
+    关于句子边界（snap）：
+      纯粹按字数切，一定会切在句子中间。实测后果很具体——
+      「辩证唯物主义自然观的定义」那句被切成两半，前半块和后半块都不像定义，
+      重排模型给这两块都打了低分（5.12 / 5.15），而给一段通顺的无关段落打了 7.01。
+      所以切到目标位置附近时，往后找一个句末标点再断。
+
+    tolerance 是允许偏离多少：块长 500、tolerance=0.3，
+    就允许在 350~650 之间找句号。太大块长会乱跳，太小常常找不到句号只能硬切。
     """
     if size <= 0:
         raise ValueError("size 必须大于 0")
@@ -55,10 +66,28 @@ def chunk_text(text: str, size: int, overlap: int) -> list[tuple[int, int]]:
     n = len(text)
     while start < n:
         end = min(start + size, n)
+
+        if snap and end < n:
+            # 优先往后找：宁可块长一点，也要在句号后断开
+            lo = max(start + 1, int(end - size * tolerance))
+            hi = min(n, int(end + size * tolerance))
+            cut = None
+            for i in range(end, hi):
+                if text[i] in SENT_END:
+                    cut = i + 1
+                    break
+            if cut is None:                      # 后面没有，就往回找
+                for i in range(end, lo, -1):
+                    if text[i - 1] in SENT_END:
+                        cut = i
+                        break
+            if cut:
+                end = cut
+
         spans.append((start, end))
         if end >= n:
             break
-        start = end - overlap
+        start = max(0, end - overlap)
     return spans
 
 
