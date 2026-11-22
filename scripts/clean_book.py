@@ -30,6 +30,15 @@ HEADING = re.compile(r"^\s*(第[一二三四五六七八九十百]+[章节]|[一
 FOOTNOTE = re.compile(
     r"[①-⑩][^①-⑩\n]{0,150}?(?:第\d+页|年版|出版社)[^①-⑩\n]{0,25}?[。．]")
 
+# 第二类脚注：形如 ①“引文”（作者：《书名》，出版社，年份）
+# 上面那条要求出现"第X页/年版/出版社"，但很多引注被 OCR 截断在半途
+# （如"…《马克思主义哲学原理》，中国人民大学出"），匹配不到。
+FOOTNOTE2 = re.compile(
+    r"[①-⑩][“\"「][^①-⑩\n]{0,160}?[”\"」](?:[（(][^）)\n]{0,80}[）)])?[。．]?")
+
+# 剩下的孤立圈号：脚注内容已经被清掉，标记留着只会让正文出现"莫名 ①②"
+CIRCLED = re.compile(r"[①②③④⑤⑥⑦⑧⑨⑩]")
+
 # 页眉阈值：在超过这么多页上原样出现的短行，判为页眉/页脚
 HEADER_MIN_PAGES = 8
 HEADER_MAX_LEN = 30
@@ -101,6 +110,15 @@ def main():
     before = len(text)
     text, n_foot = FOOTNOTE.subn("", text)
     print(f"清除脚注 {n_foot} 处，减少 {before - len(text)} 字")
+
+    # 第二类：引文式脚注（①“引文”（作者：《书名》，…））
+    t2 = len(text)
+    text, n2 = FOOTNOTE2.subn("", text)
+    print(f"清除引文式脚注 {n2} 处，减少 {t2 - len(text)} 字")
+
+    # 剩下的孤立圈号：内容都清掉了，标记留着只会让正文出现"莫名 ①②"
+    text, n3 = CIRCLED.subn("", text)
+    print(f"清除孤立圈号 {n3} 处")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")
 
