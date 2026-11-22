@@ -39,6 +39,11 @@ def load_docs() -> dict:
 # 句末标点。换行也算——教材里一个自然段结束时会有换行
 SENT_END = "。！？；\n»”」』）"
 
+# 块首要跳过的字符：脚注圈号 + 收尾引号/括号。
+# 正文里常见「…加以扬弃。②，“企图用…」，对齐到句号后会留下孤零零的「②，」，
+# 引用显示出来既不像一句话的开头，也容易被误当成正文。
+LEADING_SKIP = "①②③④⑤⑥⑦⑧⑨⑩»”」』）。，、；：\n "
+
 
 def chunk_text(text: str, size: int, overlap: int,
                snap: bool = True, tolerance: float = 0.3) -> list[tuple[int, int]]:
@@ -87,7 +92,26 @@ def chunk_text(text: str, size: int, overlap: int,
         spans.append((start, end))
         if end >= n:
             break
-        start = max(0, end - overlap)
+
+        # 下一块的起点：先回退 overlap，再往后对齐到句号之后。
+        #
+        # 为什么要对齐起点：之前只对齐了结尾，起点是「结尾往前 100 字」，
+        # 必然落在句子中间——每块开头都是半句话。而块开头恰恰是用户
+        # 在引用里看到的第一眼（截图里那种「发展模式及动力 学推向前进“①」）。
+        # 对齐之后 overlap 的实际长度会略小于设定值（60~100），可以接受。
+        nxt = max(0, end - overlap)
+        if snap and 0 < nxt < n:
+            hi = min(n, nxt + max(20, int(size * tolerance)))
+            for i in range(nxt, hi):
+                if text[i - 1] in SENT_END:
+                    nxt = i
+                    break
+            # 跳过紧跟句号的脚注标记和收尾引号。
+            # 正文里常见「…加以扬弃。②，“企图用…」，对齐到句号后
+            # 会留下孤零零的「②，」，引用显示出来很难看，也不像一句话的开头。
+            while nxt < n and text[nxt] in LEADING_SKIP:
+                nxt += 1
+        start = nxt
     return spans
 
 

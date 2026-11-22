@@ -174,7 +174,7 @@ class DocQA:
             cites.append({
                 "n": n,
                 "section": self.section_range(*self.spans[ci]),
-                "snippet": self.chunks[ci][:200],
+                "snippet": self.chunks[ci],        # 整块都给，不截——截 200 字会断在半句
                 "score": round(sc, 3),
                 "pos": self.spans[ci][0],
             })

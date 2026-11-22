@@ -180,7 +180,7 @@ async function ask(text) {
       sec.appendChild(sc);
       const txt = document.createElement('div');
       txt.className = 'txt';
-      txt.textContent = c.snippet + (c.snippet.length >= 200 ? '…' : '');
+      txt.textContent = c.snippet;
       d.append(sec, txt);
       c2.appendChild(d);
     });
