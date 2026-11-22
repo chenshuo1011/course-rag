@@ -134,6 +134,13 @@ async function ask(text) {
 
     out.innerHTML = '';
 
+    if (r.rewrite) {
+      const w = document.createElement('div');
+      w.className = 'warn';
+      w.textContent = `你的问法偏口语，检索时自动改写成了：${r.rewrite}`;
+      out.appendChild(w);
+    }
+
     if (r.low_confidence) {
       const w = document.createElement('div');
       w.className = 'warn';

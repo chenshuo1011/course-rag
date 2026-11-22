@@ -24,6 +24,8 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
+
 import chunk as chunkmod
 import embedder
 import llm
@@ -34,6 +36,23 @@ BOOK = ROOT / "data" / "book" / "book.txt"
 
 POOL = 10          # 粗排取多少条进重排
 TOP_N = 3          # 最终给模型几条
+MERGE_CAP = 12     # 改写后两路候选合并的上限（再多重排就太慢）
+
+# 触发改写的最低相似度阈值。这个数是量出来的，不是拍的：
+#   标题式查询（144 条）最高分中位 0.684、最低 0.545
+#   口语式查询（18 条）中位 0.583
+#   应拒答（2 条）0.447~0.463
+# 取 0.60 时：标题式只有 3% 误触发，口语式能覆盖 67%
+REWRITE_THRESHOLD = 0.60
+
+REWRITE_SYSTEM = """你会把学生的口语问题改写成教材检索用的查询。
+
+规则：
+1. 只输出改写后的查询本身，一行，不要解释、不要引号。
+2. 必须使用这门课的学科术语（如「朴素唯物主义自然观」「自然界的本原」
+   「辩证唯物主义」「系统自然观」「科学技术异化」）。
+3. 保留原问题的核心意图，不要添加原问题没有的内容。
+4. 不要写成疑问句，写成「主题 + 具体方面」的短语。"""
 
 SYSTEM = """你是课程助教，只能用【片段】里的内容回答。
 
@@ -115,9 +134,36 @@ class DocQA:
     def ask(self, query: str) -> dict:
         t = {}
         t0 = time.perf_counter()
-        cand = self.index.search(embedder.embed_query(query).numpy(), POOL)[0]
+
+        qv = embedder.embed_query(query).numpy().reshape(-1)
+        qv = qv / (np.linalg.norm(qv) or 1.0)
+        sims = self.index.v @ qv
+        top_sim = float(sims.max())
+        cand = np.argsort(-sims)[:POOL].tolist()
+
+        # 两段式：只对"口语型"查询做改写。
+        # 术语型查询不动它——改写有猜错意图的风险（实测「书里讲科技那部分」
+        # 被改成「科学技术异化」，意思就跑偏了），没必要冒这个险。
+        rewrite = None
+        if top_sim < REWRITE_THRESHOLD:
+            try:
+                rewrite = llm.chat(REWRITE_SYSTEM, query, max_tokens=60).strip().strip('"“”')
+            except Exception:
+                rewrite = None
+            if rewrite:
+                rv = embedder.embed_query(rewrite).numpy().reshape(-1)
+                rv = rv / (np.linalg.norm(rv) or 1.0)
+                extra = np.argsort(-(self.index.v @ rv))[:POOL].tolist()
+                seen, merged = set(), []
+                for i in cand + extra:
+                    if i not in seen:
+                        seen.add(i)
+                        merged.append(i)
+                cand = merged[:MERGE_CAP]
         t["retrieve_ms"] = round((time.perf_counter() - t0) * 1000)
 
+        # 重排用**原句**，不用改写后的句子。
+        # 改写只负责"把词找回来"（召回），排序要看的是"这段能不能回答用户原本的问法"。
         t0 = time.perf_counter()
         order, scores = self._rerank(query, cand)
         t["rerank_ms"] = round((time.perf_counter() - t0) * 1000)
@@ -143,6 +189,7 @@ class DocQA:
 
         return {"query": query, "answer": answer.strip(),
                 "citations": cites, "timings": t,
+                "rewrite": rewrite, "top_sim": round(top_sim, 3),
                 "total_ms": sum(t.values())}
 
 
