@@ -1,0 +1,30 @@
+# 运行环境：Python 3.11（实测于 D:/anaconda3/envs/yolo）
+#
+# 装法：
+#   pip install -r requirements.txt
+# 国内建议加镜像：
+#   pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+#
+# 说明：torch 装 CPU 版即可，本项目全部在 CPU 上跑
+#   pip install torch==2.5.0 --index-url https://download.pytorch.org/whl/cpu
+
+# ── Web 服务 ──
+fastapi==0.162.7
+uvicorn==0.54.0
+pydantic==2.14.3
+
+# ── 检索与模型 ──
+numpy==2.4.6
+torch==2.5.0
+transformers==4.46.3
+jieba==0.42.1
+faiss-cpu==1.16.0
+
+# ── 扫描版 PDF 处理（教材链路才需要）──
+pypdf==7.1.0
+pypdfium2==5.15.2
+rapidocr-onnxruntime==1.4.4
+
+# ── 题库解析 ──
+openpyxl==3.1.5
+requests==2.34.2

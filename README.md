@@ -6,6 +6,43 @@
 
 ---
 
+## 五分钟跑起来
+
+```bat
+git clone https://github.com/chenshuo1011/course-rag.git
+cd course-rag
+pip install -r requirements.txt          :: 国内加 -i https://mirrors.aliyun.com/pypi/simple/
+"D:\anaconda3\envs\yolo\python.exe" scripts\run_all.py    :: 重建数据与评测（约 80 秒）
+run_server.bat                                            :: 启动，然后开 http://127.0.0.1:8000
+```
+
+四个页面：`/` 答题 · `/review` 错题复习 · `/chat` 题库问答 · `/doc` 教材问答
+
+**注意**：`/doc` 首次启动要 30 秒加载重排模型（278M），页面上会显示加载状态。
+之后的请求 2~3 秒（口语型问题 4~5 秒，因为会触发一次查询改写）。
+
+`run_all.py` 会按正确顺序跑：拼长文 → 清洗 → 切片 → **重建评测集** → 评测。
+评测集存的是字符偏移，所以清洗改了正文之后必须先重建，否则指标会假崩（实测 37% → 11%）。
+要连重排评测一起跑就加 `--full`（多 5 分钟）；要重跑 OCR 加 `--ocr`（多 10 分钟）。
+
+---
+
+## 目录
+
+- [结果](#结果)
+- [三个发现](#三个发现)
+- [管线](#管线)
+- [文件](#文件)
+- [运行](#运行)
+- [局限](#局限)
+- [加生成之后（`ask.py`）](#加生成之后askpy)
+- [从检索到 Agent（`agent.py`）](#从检索到-agent-agentpy)
+- [服务化：从"我电脑上能跑"到"别人能调"](#服务化从我电脑上能跑到别人能调)
+- [错题本：把"答完就忘"变成"记得你错在哪"](#错题本把答完就忘变成记得你错在哪)
+- [教材 RAG：从一本扫描 PDF 到带引用的答案](#教材-rag从一本扫描-pdf-到带引用的答案)
+
+---
+
 ## 结果
 
 150 条测试用例（50 道题 × 2–3 种学生口语问法），指标为 hit@1（第一位就是正确题目）：
@@ -95,6 +132,8 @@
 | `scripts/vectorstore.py` | 四种检索后端：numpy / FAISS 扁平 / IVF / HNSW |
 | `scripts/doc_ask.py` | **教材问答**：检索 + 重排 + 生成 + 引用 |
 | `scripts/check_gen.py` | 生成质量抽查（10 条，出待填表） |
+| `scripts/run_all.py` | **一键重建**：按依赖顺序跑全链路，打印产物清单 |
+| `requirements.txt` | 依赖与版本（Python 3.11，全 CPU） |
 | `scripts/probe_threshold.py` | 探针：验证"相似度能不能当置信度" |
 | `scripts/demo_tech.py` | 用真实数字拆解 embedding / 余弦 / BM25 / 归一化 |
 | `scripts/exp_rewrite.py` | 实验 1：口语→书面改写 |
