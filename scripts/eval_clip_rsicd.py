@@ -13,6 +13,15 @@ RSICD：1093 张（test split），描述更细（"机场很大"、"机场旁边
   严格 —— 必须命中描述对应的那张图
   宽松 —— 命中任何一张同描述的图（RSICD 描述基本唯一，两者应该接近）
 
+数据来源（parquet 只有 53MB，留在 D:/datasets/ 里，所以能复现）：
+    https://hf-mirror.com/datasets/arampacha/rsicd/resolve/main/data/test-00000-of-00001.parquet
+    1093 张图 + 英文描述（图以 bytes 存在 parquet 里）
+    下载注意：这个镜像偶尔只给部分文件（实测拿到过 3.6MB 的截断版），
+    用 curl -C - 续传后再用 pyarrow 校验行数是否为 1093。
+
+复现说明：向量和译文缓存在 data/clip/，重跑不用再编码、不用再调模型翻译。
+实测复核：重下数据后重跑，数字与首次完全一致（英文 2/13/24、中文 7/19/30，严格口径）。
+
 用法：
     "D:\anaconda3\envs\yolo\python.exe" eval_clip_rsicd.py
 """

@@ -11,6 +11,15 @@
   · 翻译成中文再检索   —— Chinese-CLIP 的主场
   两者的差距能说明"是否需要多做一步翻译"，那一步是有成本的。
 
+数据来源（数据集已删，要复现必须重下）：
+    https://hf-mirror.com/datasets/isaaccorley/Sydney-Captions/resolve/main/Sydney_captions.zip
+    339MB，解压到 D:/datasets/sydney（613 张 tif + dataset.json）
+    注意这个仓库只有 613 张，完整版应为 4981 张
+
+复现说明：**仅凭缓存复现不了**。trans_zh.json 按描述去重后只剩 235 条，
+而「哪句描述属于哪张图」的映射存在 dataset.json 里，删了数据就没了。
+图像向量（613×512）还在 data/clip/，可用于聚类/相似图检索，但重算不出 recall。
+
 用法：
     "D:\anaconda3\envs\yolo\python.exe" eval_clip_sydney.py
 """
