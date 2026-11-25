@@ -130,7 +130,11 @@ ZONE_ALIAS = {
     "左侧半边": ("左", None), "左方": ("左", None),
     "右侧": ("右", None), "右边": ("右", None), "右半边": ("右", None),
     "右方": ("右", None),
-    "中间": (None, None), "中央": (None, None), "正中": (None, None),
+    # "中间"在中文里通常指中央那一格，不是"整张图"。
+    # 整图用 count（不传方位）表达，所以这里映射到中中。
+    "中间": ("中", "中"), "中央": ("中", "中"), "正中": ("中", "中"),
+    "正中间": ("中", "中"), "中心": ("中", "中"),
+    "全场": (None, None), "全图": (None, None), "整张图": (None, None),
     "上半": (None, "上"), "上方": (None, "上"), "上边": (None, "上"),
     "上部": (None, "上"), "顶部": (None, "上"),
     "下半": (None, "下"), "下方": (None, "下"), "下边": (None, "下"),
@@ -345,10 +349,11 @@ class ImgTools:
         want = PEOPLE_GROUP if (self.scene == "aerial" and cls_en in PEOPLE_GROUP) else {cls_en}
         dets, _, _ = self._detect(image_id)
         col, row = parse_zone(zone)
-        if col is None and row is None:
+        if col is None and row is None and zone.strip() not in (
+                "全场", "全图", "整张图"):
             return {"图片": image_id, "类别": cls_en, "建议措辞": "重问",
                     "说明": f"认不出方位「{zone}」，可用：左侧/右边/上方/下方/中间，"
-                            f"或九宫格（左上、中上、右下…）"}
+                            f"或九宫格（左上、中上、右下…）。要整张图的数就直接用 count。"}
         sub = [d for d in dets
                if d["cls"] in want
                and (col is None or d["zone"][0] == col)

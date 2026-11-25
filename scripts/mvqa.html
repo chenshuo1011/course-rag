@@ -166,6 +166,37 @@ function draw(boxes, w, h) {
     ctx.font = `${Math.max(13, w / 45)}px system-ui`;
     ctx.fillText('（数据集图像不显示原图，仅示框位置）', w * 0.06, h * 0.5);
   }
+  // 九宫格参考线：方位判定就是按这三等分算的，不画出来用户没法核对
+  ctx.save();
+  ctx.setLineDash([8, 6]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = Math.max(1, w / 900);
+  [w / 3, 2 * w / 3].forEach(x => {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  });
+  [h / 3, 2 * h / 3].forEach(y => {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  });
+  ctx.restore();
+
+  // 如果这次问的是某个区域，把那一片调亮、其余压暗，用户一眼能看出在数哪块
+  if (window.hlZone) {
+    const r = zoneRect(window.hlZone, w, h);
+    if (r) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, w, r.y0);
+      ctx.fillRect(0, r.y1, w, h - r.y1);
+      ctx.fillRect(0, r.y0, r.x0, r.y1 - r.y0);
+      ctx.fillRect(r.x1, r.y0, w - r.x1, r.y1 - r.y0);
+      ctx.strokeStyle = 'rgba(255,214,10,0.95)';
+      ctx.lineWidth = Math.max(2, w / 400);
+      ctx.setLineDash([]);
+      ctx.strokeRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+      ctx.restore();
+    }
+  }
+
   const lw = Math.max(1.5, w / 700);
   ctx.lineWidth = lw;
   ctx.font = `${Math.max(10, w / 90)}px system-ui`;
@@ -203,6 +234,30 @@ function paintImage(fileOrUrl) {
     im.onerror = () => res(null);
     im.src = fileOrUrl;
   });
+}
+
+// 把中文方位换成画面上的矩形（和 mvqa.py 里的 ZONE_ALIAS 一一对应）
+function zoneRect(zone, w, h) {
+  if (!zone) return null;
+  const cols = { '左': [0, w / 3], '中': [w / 3, 2 * w / 3], '右': [2 * w / 3, w] };
+  const rows = { '上': [0, h / 3], '中': [h / 3, 2 * h / 3], '下': [2 * h / 3, h] };
+  let col = null, row = null;
+  const nine = { '左上': ['左','上'], '中上': ['中','上'], '右上': ['右','上'],
+                 '左中': ['左','中'], '中中': ['中','中'], '右中': ['右','中'],
+                 '左下': ['左','下'], '中下': ['中','下'], '右下': ['右','下'] };
+  const strip = { '左侧': ['左', null], '左边': ['左', null], '左半边': ['左', null],
+                  '右侧': ['右', null], '右边': ['右', null], '右半边': ['右', null],
+                  '上方': [null, '上'], '上边': [null, '上'], '顶部': [null, '上'],
+                  '下方': [null, '下'], '下边': [null, '下'], '底部': [null, '下'],
+                  '中间': ['中', '中'], '中央': ['中', '中'], '正中': ['中', '中'],
+                  '正中间': ['中', '中'], '中心': ['中', '中'] };
+  if (nine[zone]) [col, row] = nine[zone];
+  else if (strip[zone]) [col, row] = strip[zone];
+  else return null;
+  if (col === null && row === null) return null;   // 全图不画高亮
+  const x = col ? cols[col] : [0, w];
+  const y = row ? rows[row] : [0, h];
+  return { x0: x[0], y0: y[0], x1: x[1], y1: y[1] };
 }
 
 function chips(counts, low) {
@@ -256,6 +311,7 @@ async function detectOnly() {
     if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
     // 数据集图没有原图可显示（只示位置），上传图已经画上去了
     hasImg = !!f;
+    window.hlZone = null;
     draw(d.boxes, d.w, d.h);
     const [su, lo] = splitByConf(d.boxes);
     chips(su, lo);
@@ -290,9 +346,19 @@ async function ask() {
     if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
 
     hasImg = !!f;
+    const ci = (d.calls || []).filter(c => c.tool === 'count_in').pop();
+    window.hlZone = ci ? (ci.args.zone || null) : null;
     draw(d.boxes, d.w, d.h);
     const [su2, lo2] = splitByConf(d.boxes);
     chips(su2, lo2);
+    if (window.hlZone) {
+      const hint = document.createElement('span');
+      hint.className = 'chip';
+      hint.style.background = '#fffbe6';
+      hint.style.borderColor = '#f0dcb0';
+      hint.textContent = `黄框 = 「${window.hlZone}」（画面三等分）`;
+      document.querySelector('#counts').appendChild(hint);
+    }
 
     const a = document.createElement('div');
     a.className = 'answer';
