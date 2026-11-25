@@ -36,6 +36,25 @@ WEIGHT = Path(r"D:/visdrone/yolov8n_visdrone.pt")
 IMGSZ = 1280
 CONF = 0.25
 
+# 两套权重，按场景选。
+#
+# 为什么要两套：VisDrone 权重只见过"白天 + 正射俯视 + 目标十几个像素"的图。
+# 实测一张夜景斜视照片（摩托约 200 像素），VisDrone 权重只检出 2 个人、0 辆摩托；
+# 换 COCO 通用权重同一张图检出 5 辆摩托 + 5 个人。
+# 尺寸差 5~20 倍是最致命的：模型没见过这么大的目标。
+SCENES = {
+    "aerial": (Path(r"D:/visdrone/yolov8n_visdrone.pt"), IMGSZ,
+               "航拍俯视：只认 VisDrone 的 10 类（行人、人群、自行车、汽车、"
+               "面包车、卡车、三轮车、遮阳三轮、公交、摩托），目标通常很小"),
+    "general": (Path(r"D:/visdrone/yolov8n_coco.pt"), 960,
+                "日常场景：COCO 80 类（人、汽车、摩托、自行车、公交、卡车、"
+                "船、飞机、火车等），目标较大、视角倾斜"),
+}
+# 同一类东西在两套权重里名字不同
+CANON = {"pedestrian": "person", "people": "person", "motor": "motorcycle",
+         "car": "car", "van": "car", "truck": "truck", "bus": "bus",
+         "bicycle": "bicycle"}
+
 # 实测检出率（n@1280，conf 0.25，VisDrone val 548 张）
 # 用途：让模型知道哪类能说确数、哪类只能说"至少"
 RELIABILITY = {
@@ -74,39 +93,46 @@ KNOWN = set(RELIABILITY)        # 模型真正能识别的 10 类
 # 否则会出现"图里没有行人"而画面里明明站着一堆人的回答。
 PEOPLE_GROUP = {"pedestrian", "people"}
 
-_model = None
+_models = {}
 
 
-def get_model():
-    global _model
-    if _model is None:
-        _model = YOLO(str(WEIGHT))
+def get_model(scene: str = "aerial"):
+    """按场景懒加载。两套权重都不大（各 6MB），但要各自预热一次。"""
+    if scene not in _models:
+        path, sz, _ = SCENES[scene]
+        if not path.exists():
+            raise FileNotFoundError(f"缺权重 {path}")
+        m = YOLO(str(path))
         first = sorted((BASE / "images").glob("*.jpg"))[0]
-        _model.predict(str(first), verbose=False, device="cpu", imgsz=IMGSZ)
-    return _model
+        # 预热：首帧含模型图优化，不能算在第一个用户头上
+        m.predict(str(first), verbose=False, device="cpu", imgsz=sz)
+        _models[scene] = m
+    return _models[scene]
 
 
 class ImgTools:
     """工具实现。坐标用 3x3 网格描述，比"像素坐标"对人有用。"""
 
-    def __init__(self, calibrated: bool = True):
+    def __init__(self, calibrated: bool = True, scene: str = "aerial"):
         # calibrated=False 表示这张图没有标注可对照（比如用户上传的图）。
         # 那种情况下不能引用 VisDrone 的实测检出率——换了数据分布就不成立，
         # 措辞只能退到"模型检出 N 个"，不能声称"至少/约"。
         self.calibrated = calibrated
+        self.scene = scene
         self.cache = {}
 
     def _detect(self, image_id: str):
-        if image_id in self.cache:
-            return self.cache[image_id]
+        key = (self.scene, image_id)
+        if key in self.cache:
+            return self.cache[key]
         p = BASE / "images" / f"{image_id}.jpg"
         if not p.exists():
             raise FileNotFoundError(f"没有这张图：{image_id}")
         img = cv2.imread(str(p))
         h, w = img.shape[:2]
-        r = get_model().predict(str(p), verbose=False, device="cpu",
-                                imgsz=IMGSZ, conf=CONF)[0]
-        m = get_model()
+        _, sz, _ = SCENES[self.scene]
+        m = get_model(self.scene)
+        r = m.predict(img, verbose=False, device="cpu", imgsz=sz, conf=CONF)[0]
         dets = []
         for b, c, s in zip(r.boxes.xyxy.tolist(), r.boxes.cls.tolist(),
                            r.boxes.conf.tolist()):
@@ -115,8 +141,8 @@ class ImgTools:
             zone = ("左" if cx < w / 3 else "中" if cx < 2 * w / 3 else "右") + \
                    ("上" if cy < h / 3 else "中" if cy < 2 * h / 3 else "下")
             dets.append({"cls": m.names[int(c)], "conf": float(s), "zone": zone})
-        self.cache[image_id] = (dets, w, h)
-        return self.cache[image_id]
+        self.cache[key] = (dets, w, h)
+        return self.cache[key]
 
     def overview(self, image_id: str) -> dict:
         dets, w, h = self._detect(image_id)
@@ -130,19 +156,31 @@ class ImgTools:
         return {"图片": image_id, "尺寸": f"{w}x{h}", "各类数量": items,
                 "总计": len(dets)}
 
+    def _canon(self, name: str) -> str:
+        """把中文别名解析出的类别，按当前场景换成模型里的真实类名。"""
+        if self.scene == "general":
+            return CANON.get(name, name)
+        return name
+
+    def _known(self) -> set:
+        """当前场景能识别的类名。航拍用实测过的那 10 类；通用直接问模型。"""
+        if self.scene == "general":
+            return set(get_model("general").names.values())
+        return KNOWN
+
     def count(self, image_id: str, cls: str) -> dict:
-        cls_en = ALIAS.get(cls.strip(), cls.strip())
-        if cls_en not in KNOWN:
-            # 模型只认 VisDrone 的 10 类。问"有帆船吗"时不能给"0 艘"——
-            # 那会被理解成"看过了，确实没有"，而实际是"这一类我根本不会看"。
+        cls_en = self._canon(ALIAS.get(cls.strip(), cls.strip()))
+        if cls_en not in self._known():
+            # 不认识的类别不能给"0 个"——那会被理解成"看过了，确实没有"，
+            # 而实际是"这一类我根本不会看"。
             return {"图片": image_id, "类别": cls_en, "检出数量": None,
                     "建议措辞": "拒答",
-                    "说明": f"模型只识别这 10 类：{'、'.join(KNOWN)}。"
+                    "说明": f"当前模式只识别这些类别：{'、'.join(sorted(self._known()))}。"
                             f"「{cls}」不在其中，无法判断。"
                             f"回答里应说明识别范围，不能给数字。"}
         dets, _, _ = self._detect(image_id)
 
-        if cls_en in PEOPLE_GROUP:
+        if cls_en in PEOPLE_GROUP and self.scene == "aerial":
             # 两类一起数，同时给构成，回答可以说「共 8 人」
             ped = sum(1 for d in dets if d["cls"] == "pedestrian")
             ppl = sum(1 for d in dets if d["cls"] == "people")
@@ -178,12 +216,15 @@ class ImgTools:
                         f"所以真实数量可能{'更多' if ratio < 1 else '略少'}。"}
 
     def locate(self, image_id: str, cls: str) -> dict:
-        cls_en = ALIAS.get(cls.strip(), cls.strip())
-        if cls_en not in KNOWN:
+        cls_en = self._canon(ALIAS.get(cls.strip(), cls.strip()))
+        if cls_en not in self._known():
             return {"图片": image_id, "类别": cls_en, "检出数量": None,
-                    "说明": f"「{cls}」不在模型的识别范围（只认 VisDrone 的 10 类）"}
+                    "说明": f"「{cls}」不在当前模式的识别范围里"}
         dets, _, _ = self._detect(image_id)
-        want = PEOPLE_GROUP if cls_en in PEOPLE_GROUP else {cls_en}
+        if self.scene == "aerial" and cls_en in PEOPLE_GROUP:
+            want = PEOPLE_GROUP
+        else:
+            want = {cls_en}
         sub = [d for d in dets if d["cls"] in want]
         if not sub:
             return {"图片": image_id, "类别": cls_en, "检出数量": 0,
@@ -233,12 +274,17 @@ SYSTEM = """你是遥感图像问答助手，可以调用工具看图。你**不
    不要加「至少/约」，也不要说"这类目标检出率多少"——那是另一个数据集上的数字。"""
 
 
-def build_system() -> str:
+def build_system(scene: str = "aerial") -> str:
     lines = []
     for name, t in TOOLS.items():
         args = "；".join(f"{k}: {v}" for k, v in t["args"].items())
         lines.append(f"- {name}({args})\n  {t['desc']}")
-    return SYSTEM.format(tools="\n".join(lines))
+    # 场景不同，能识别的类别和措辞依据都不同，必须写进提示词，
+    # 否则通用模式下模型会继续套用 VisDrone 的检出率说法
+    note = SCENES[scene][2]
+    measured = ("" if scene != "aerial" else
+                "这是航拍模式，可以用实测检出率来措辞（工具返回里会带）。")
+    return SYSTEM.format(tools="\n".join(lines)) + f"\n\n当前场景：{note}。{measured}"
 
 
 def _first_json(s: str):
@@ -277,9 +323,9 @@ def parse_action(text: str) -> dict:
 
 
 def run(question: str, image_id: str, max_steps: int = 6, verbose: bool = True,
-        calibrated: bool = True) -> dict:
-    tools = ImgTools(calibrated=calibrated)
-    messages = [{"role": "system", "content": build_system()},
+        calibrated: bool = True, scene: str = "aerial") -> dict:
+    tools = ImgTools(calibrated=calibrated, scene=scene)
+    messages = [{"role": "system", "content": build_system(scene)},
                 {"role": "user", "content": f"图片：{image_id}\n问题：{question}"}]
     called, steps = [], []
 
@@ -292,7 +338,14 @@ def run(question: str, image_id: str, max_steps: int = 6, verbose: bool = True,
         if verbose:
             print(f"  [{act.get('action')}] {act.get('thought','')}")
         if act.get("action") == "final":
-            return {"answer": act.get("answer", ""), "calls": called, "steps": steps,
+            ans = act.get("answer", "")
+            if not calibrated:
+                # 没有标注可对照时，不能说"至少 N""约 N"——那是在声称精度。
+                # 提示词里写了这条，但实测模型会漏遵守（通用模式下仍说"至少 5 辆"），
+                # 所以这里加一道确定性的兜底：只删出现在数字前的限定词，
+                # 不碰"约束""大约何时"这类词。
+                ans = re.sub(r"(至少|大约|大概|约)\s*(?=\d)", "", ans)
+            return {"answer": ans, "calls": called, "steps": steps,
                     "image": image_id, "question": question}
 
         name, args = act.get("action"), act.get("args", {}) or {}

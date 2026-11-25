@@ -36,7 +36,7 @@ import mvqa
 HERE = Path(__file__).parent
 app = FastAPI(title="遥感图像问答")
 
-_model = None
+_models: dict = {}
 _model_lock = threading.Lock()
 _ready = threading.Event()
 # CPU 推理是独占资源：2~3 路并发就会把核吃满，全部变慢。
@@ -46,25 +46,25 @@ _sem = threading.Semaphore(2)
 MAX_BOXES = 200
 
 
-def get_model() -> YOLO:
-    global _model
-    if _model is None:
+def get_model(scene: str = "aerial") -> YOLO:
+    """两套权重各自懒加载。航拍那套启动时预热，通用那套等第一次用到再加载。"""
+    m = _models.get(scene)
+    if m is None:
         with _model_lock:
-            if _model is None:
-                _model = YOLO(str(mvqa.WEIGHT))
-                # 预热：首帧包含模型图优化，不能算在第一个用户头上
-                first = sorted((mvqa.BASE / "images").glob("*.jpg"))[0]
-                _model.predict(str(first), verbose=False, device="cpu",
-                               imgsz=mvqa.IMGSZ, conf=mvqa.CONF)
-                _ready.set()
-    return _model
+            m = _models.get(scene)
+            if m is None:
+                m = mvqa.get_model(scene)      # 已含预热
+                _models[scene] = m
+                if scene == "aerial":
+                    _ready.set()
+    return m
 
 
-def detect_array(img: np.ndarray) -> list[dict]:
+def detect_array(img: np.ndarray, scene: str = "aerial") -> list[dict]:
     """对一张 BGR 图跑检测，返回框列表（像素坐标）。"""
-    m = get_model()
-    r = m.predict(img, verbose=False, device="cpu",
-                  imgsz=mvqa.IMGSZ, conf=mvqa.CONF)[0]
+    m = get_model(scene)
+    _, sz, _ = mvqa.SCENES[scene]
+    r = m.predict(img, verbose=False, device="cpu", imgsz=sz, conf=mvqa.CONF)[0]
     out = []
     for b, c, s in zip(r.boxes.xyxy.tolist(), r.boxes.cls.tolist(),
                        r.boxes.conf.tolist()):
@@ -77,7 +77,9 @@ def detect_array(img: np.ndarray) -> list[dict]:
 
 @app.on_event("startup")
 def _warm():
-    threading.Thread(target=get_model, daemon=True).start()
+    # 只预热航拍那套（默认场景）。通用那套等用户第一次选"日常"再加载，
+    # 免得每次启动都多等一次。
+    threading.Thread(target=get_model, args=("aerial",), daemon=True).start()
 
 
 @app.get("/status")
@@ -97,7 +99,8 @@ class AskIn(BaseModel):
 
 @app.post("/detect")
 async def detect(file: UploadFile | None = File(None),
-                 image_id: str = Form("")):
+                 image_id: str = Form(""),
+                 scene: str = Form("aerial")):
     """只跑检测。前端"只看框"用，也方便单独验证模型。"""
     with _sem:
         if file is not None:
@@ -117,7 +120,7 @@ async def detect(file: UploadFile | None = File(None),
             raise HTTPException(400, "要么传图，要么给 image_id")
 
         t0 = time.perf_counter()
-        boxes = detect_array(img)
+        boxes = detect_array(img, scene)
         ms = round((time.perf_counter() - t0) * 1000)
 
     h, w = img.shape[:2]
@@ -131,7 +134,8 @@ async def detect(file: UploadFile | None = File(None),
 @app.post("/ask")
 async def ask(question: str = Form(...),
               file: UploadFile | None = File(None),
-              image_id: str = Form("")):
+              image_id: str = Form(""),
+              scene: str = Form("aerial")):
     """提问。上传图会先存到临时目录，再走和命令行完全相同的 Agent 流程。"""
     if file is not None:
         data = await file.read()
@@ -159,12 +163,14 @@ async def ask(question: str = Form(...),
     t0 = time.perf_counter()
     with _sem:
         det_img = cv2.imread(str(mvqa.BASE / "images" / f"{box_id}.jpg"))
-        boxes = detect_array(det_img)
+        boxes = detect_array(det_img, scene)
         det_ms = round((time.perf_counter() - t0) * 1000)
 
     try:
+        # 通用模式没有实测依据（我们只在 VisDrone 上量过），一律按"未标定"措辞
         r = mvqa.run(question, target_id, verbose=False,
-                     calibrated=(file is None))
+                     calibrated=(file is None and scene == "aerial"),
+                     scene=scene)
     except Exception as e:
         raise HTTPException(500, f"问答失败：{type(e).__name__}: {e}")
 
