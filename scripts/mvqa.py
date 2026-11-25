@@ -178,21 +178,42 @@ class ImgTools:
 
     def overview(self, image_id: str) -> dict:
         dets, w, h = self._detect(image_id)
-        c = Counter(d["cls"] for d in dets if d["conf"] >= SURE_CONF)
+        sure = Counter(d["cls"] for d in dets if d["conf"] >= SURE_CONF)
         lowc = Counter(d["cls"] for d in dets if d["conf"] < SURE_CONF)
+
+        # 必须遍历「确认」和「不确定」两边的并集。
+        # 只遍历确认那一侧的话，全部落在 0.25~0.5 的类别会整个消失——
+        # 用户会以为图里没有这类目标，比数字偏大严重得多。
+        names = set(sure) | set(lowc)
         items = []
-        for name, n in c.most_common():
+        for name in sorted(names, key=lambda k: -(sure.get(k, 0) * 2 + lowc.get(k, 0))):
+            n, m = sure.get(name, 0), lowc.get(name, 0)
             ratio, note = RELIABILITY.get(name, (0.5, "未知"))
-            it = {"类别": name, "数量": n, "可靠度": note,
-                  "建议措辞": "可给确数" if ratio > 1.05 else
-                             ("约" if ratio > 0.8 else "至少")}
-            if lowc.get(name):
-                it["不确定数量"] = lowc[name]
+            it = {"类别": name, "数量": n}
+            if m:
+                it["不确定数量"] = m
+            if n == 0:
+                # 这一类只有低置信度框，很可能是误检，措辞必须区分开
+                it["可靠度"] = "全部为低置信度，可能是误检"
+                it["建议措辞"] = "可能"
+            elif not self.calibrated:
+                # 通用模式没有实测依据，不能说"至少/约"。
+                # 之前这里套用了航拍的检出率表，导致回答里出现"至少 2 个红绿灯"。
+                it["可靠度"] = "无实测依据"
+                it["建议措辞"] = "检出"
+            else:
+                it["可靠度"] = note
+                it["建议措辞"] = ("可给确数" if ratio > 1.05 else
+                                  ("约" if ratio > 0.8 else "至少"))
             items.append(it)
+
         return {"图片": image_id, "尺寸": f"{w}x{h}", "各类数量": items,
-                "总计": sum(c.values()),
+                "总计": sum(sure.values()),
+                "不确定总计": sum(lowc.values()),
                 "说明": "「数量」只统计置信度 0.5 以上的框；不确定数量是 0.25~0.5 的，"
-                        "可能是重复框或误检，回答时单独提，不要并入主数。"}
+                        "可能是重复框或误检，回答时单独提，不要并入主数。"
+                        "数量为 0 但有不确认数量的类别，说明模型怀疑有、但没把握，"
+                        "不能说「没有」。"}
 
     def _canon(self, name: str) -> str:
         """把中文别名解析出的类别，按当前场景换成模型里的真实类名。"""
