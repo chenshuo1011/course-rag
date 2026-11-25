@@ -120,6 +120,38 @@ ALIAS = {  # 中文说法 → 类别
 }
 KNOWN = set(RELIABILITY)        # 航拍模式下能识别的 10 类
 
+# 方位词 → (列, 行)，None 表示该维度不限。
+# 只给"左侧"就不限行，给"左上"才限到具体格子——用户说"左边"通常指整条左侧。
+ZONE_ALIAS = {
+    "左上": ("左", "上"), "中上": ("中", "上"), "右上": ("右", "上"),
+    "左中": ("左", "中"), "中中": ("中", "中"), "右中": ("右", "中"),
+    "左下": ("左", "下"), "中下": ("中", "下"), "右下": ("右", "下"),
+    "左侧": ("左", None), "左边": ("左", None), "左半边": ("左", None),
+    "左侧半边": ("左", None), "左方": ("左", None),
+    "右侧": ("右", None), "右边": ("右", None), "右半边": ("右", None),
+    "右方": ("右", None),
+    "中间": (None, None), "中央": (None, None), "正中": (None, None),
+    "上半": (None, "上"), "上方": (None, "上"), "上边": (None, "上"),
+    "上部": (None, "上"), "顶部": (None, "上"),
+    "下半": (None, "下"), "下方": (None, "下"), "下边": (None, "下"),
+    "下部": (None, "下"), "底部": (None, "下"),
+    "上方中间": ("中", "上"), "下方中间": ("中", "下"),
+}
+
+
+def parse_zone(text: str):
+    """从中文方位词里解析出 (列, 行)。认不出就返回 (None, None)。"""
+    s = (text or "").strip()
+    if not s:
+        return None, None
+    if s in ZONE_ALIAS:
+        return ZONE_ALIAS[s]
+    # 宽容一点：「画面左上角」「图左下部分」这类
+    for k, v in sorted(ZONE_ALIAS.items(), key=lambda kv: -len(kv[0])):
+        if k in s:
+            return v
+    return None, None
+
 # VisDrone 把"行人"和"人群里的其他人"分成两类（pedestrian / people），
 # 中文里都是"人"，用户不会这么区分。问"有多少人"时必须两类一起数，
 # 否则会出现"图里没有行人"而画面里明明站着一堆人的回答。
@@ -303,6 +335,36 @@ class ImgTools:
         return {"图片": image_id, "类别": cls_en, "检出数量": len(sub),
                 "方位分布": [{"方位": k, "数量": v} for k, v in z.most_common()]}
 
+    def count_in(self, image_id: str, cls: str, zone: str) -> dict:
+        """只数某个方位里的目标。看图的人天然会分区提问（"左边那排有几辆车"）。"""
+        cls_en = self._canon(ALIAS.get(cls.strip(), cls.strip()))
+        if cls_en not in self._known():
+            return {"图片": image_id, "类别": cls_en, "检出数量": None,
+                    "建议措辞": "拒答",
+                    "说明": f"「{cls}」不在当前模式的识别范围里"}
+        want = PEOPLE_GROUP if (self.scene == "aerial" and cls_en in PEOPLE_GROUP) else {cls_en}
+        dets, _, _ = self._detect(image_id)
+        col, row = parse_zone(zone)
+        if col is None and row is None:
+            return {"图片": image_id, "类别": cls_en, "建议措辞": "重问",
+                    "说明": f"认不出方位「{zone}」，可用：左侧/右边/上方/下方/中间，"
+                            f"或九宫格（左上、中上、右下…）"}
+        sub = [d for d in dets
+               if d["cls"] in want
+               and (col is None or d["zone"][0] == col)
+               and (row is None or d["zone"][1] == row)]
+        sure = sum(1 for d in sub if d["conf"] >= SURE_CONF)
+        maybe = len(sub) - sure
+        whole = sum(1 for d in dets if d["cls"] in want
+                    and d["conf"] >= SURE_CONF)
+        return {"图片": image_id, "类别": cls_en, "方位": zone,
+                "检出数量": sure, "不确定数量": maybe,
+                "全图同类别数量": whole,
+                "建议措辞": "没有" if sure == 0 else
+                            ("检出" if not self.calibrated else "可给确数"),
+                "说明": f"只数了「{zone}」这一片。全图这类目标共 {whole} 个；"
+                        f"方位按九宫格划分（画面三等分）。"}
+
 
 TOOLS = {
     "overview": {
@@ -315,8 +377,14 @@ TOOLS = {
         "args": {"image_id": "图片名", "cls": "类别，中文即可：车/人/公交/卡车/摩托/三轮/货车/面包车/自行车"},
     },
     "locate": {
-        "desc": "问某类目标在画面哪个方位（九宫格：左上/中上/右下…）。问「在哪一片」「都停在哪」用这个。",
+        "desc": "问某类目标**分布在哪些方位**（返回九宫格分布）。问「在哪一片」「都停在哪」用这个。",
         "args": {"image_id": "图片名", "cls": "类别，中文即可"},
+    },
+    "count_in": {
+        "desc": "**只数某个方位**里的目标。问「左边那条路有几辆车」「右下角有几个人」用这个。"
+                "方位可给：左侧/右边/上方/下方/中间，或九宫格（左上、中上、右下…）。"
+                "注意它和 locate 的区别：locate 给分布，count_in 给这一片的数字。",
+        "args": {"image_id": "图片名", "cls": "类别", "zone": "方位，如 左侧、左上、下方"},
     },
 }
 
@@ -334,7 +402,9 @@ image_id 直接照抄用户消息里「图片：」后面的那一串，不要�
 1. 数字**必须来自工具返回**。不许自己估算、不许加总、不许四舍五入到别的数。
 2. 工具里有「建议措辞」：写「可给确数」就说「有 26 辆」；写「约」就说「大约 26 辆」；
    写「至少」就说「至少 26 辆」。**不要无视它，也不要自己改口径。**
-3. 问数量用 count；问都有什么用 overview；问在哪一片用 locate。
+3. 问数量用 count；问都有什么用 overview。
+   问「在哪一片/分布在哪些方位」用 locate（给分布）；
+   问「左边有几辆」「右下角有几个人」这种**指定区域的数量**用 count_in。
 4. 图和问题无关（比如问天气、问价格）时，final 直接说「图上看不出这个」。
    工具返回「建议措辞：拒答」时，说明这一类不在识别范围内，
    要如实说「我只认 VisDrone 的那 10 类，看不出有没有X」，**不要给 0**。
