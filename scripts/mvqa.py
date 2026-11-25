@@ -89,7 +89,11 @@ def get_model():
 class ImgTools:
     """工具实现。坐标用 3x3 网格描述，比"像素坐标"对人有用。"""
 
-    def __init__(self):
+    def __init__(self, calibrated: bool = True):
+        # calibrated=False 表示这张图没有标注可对照（比如用户上传的图）。
+        # 那种情况下不能引用 VisDrone 的实测检出率——换了数据分布就不成立，
+        # 措辞只能退到"模型检出 N 个"，不能声称"至少/约"。
+        self.calibrated = calibrated
         self.cache = {}
 
     def _detect(self, image_id: str):
@@ -143,6 +147,11 @@ class ImgTools:
             ped = sum(1 for d in dets if d["cls"] == "pedestrian")
             ppl = sum(1 for d in dets if d["cls"] == "people")
             n = ped + ppl
+            if not self.calibrated:
+                return {"图片": image_id, "类别": "人（行人+人群）", "检出数量": n,
+                        "构成": f"行人 {ped}、人群 {ppl}",
+                        "建议措辞": "没有" if n == 0 else "检出",
+                        "说明": "上传的图没有标注对照，精度未知，照实说「模型检出 N 人」。"}
             return {"图片": image_id, "类别": "人（行人+人群）", "检出数量": n,
                     "构成": f"行人 {ped}、人群 {ppl}",
                     "实测检出率": "行人 93%、人群 58%",
@@ -152,6 +161,12 @@ class ImgTools:
                             "人群那一类实测只检出 58%，所以实际人数可能更多。"}
 
         n = sum(1 for d in dets if d["cls"] == cls_en)
+        if not self.calibrated:
+            return {"图片": image_id, "类别": cls_en, "检出数量": n,
+                    "建议措辞": "没有" if n == 0 else "检出",
+                    "说明": "这是上传的图，没有人工标注可对照，所以精度未知。"
+                            "措辞用「模型检出 N 个」，不要说「至少」或「约」——"
+                            "那需要实测依据，这里没有。"}
         ratio, note = RELIABILITY.get(cls_en, (0.5, "未知"))
         return {"图片": image_id, "类别": cls_en, "检出数量": n,
                 "实测检出率": f"{ratio:.0%}", "可靠度": note,
@@ -213,7 +228,9 @@ SYSTEM = """你是遥感图像问答助手，可以调用工具看图。你**不
    要如实说「我只认 VisDrone 的那 10 类，看不出有没有X」，**不要给 0**。
 5. 一个问题里问两类目标，就分两步各调一次 count（一次只输出一个 JSON，不要一条消息里写两个动作），不要用 overview 代替。
 6. 数量是 0（或建议措辞是「没有」）时直接说「没有」，**不要写「大约 0 个」**，那不是人话。
-7. 问「人」时工具返回的是行人+人群的合并数，必要时可以说出构成。"""
+7. 问「人」时工具返回的是行人+人群的合并数，必要时可以说出构成。
+8. 建议措辞是「检出」时，说明这张图没有标注对照，只能说「模型检出 N 个」，
+   不要加「至少/约」，也不要说"这类目标检出率多少"——那是另一个数据集上的数字。"""
 
 
 def build_system() -> str:
@@ -259,8 +276,9 @@ def parse_action(text: str) -> dict:
     raise ValueError(f"解析不了：{text[:120]}")
 
 
-def run(question: str, image_id: str, max_steps: int = 6, verbose: bool = True) -> dict:
-    tools = ImgTools()
+def run(question: str, image_id: str, max_steps: int = 6, verbose: bool = True,
+        calibrated: bool = True) -> dict:
+    tools = ImgTools(calibrated=calibrated)
     messages = [{"role": "system", "content": build_system()},
                 {"role": "user", "content": f"图片：{image_id}\n问题：{question}"}]
     called, steps = [], []

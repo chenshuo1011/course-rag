@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>遥感图像问答</title>
+<style>
+  :root {
+    --bg: #fafaf7; --card: #fff; --line: #e5e3dc; --text: #1f1e1c;
+    --muted: #6b6a64; --blue: #185fa5; --amber: #8a5a00; --amber-bg: #fdf3dd;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 20px 70px; background: var(--bg); color: var(--text);
+    font: 15px/1.75 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 4px; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0; }
+  h1 small { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
+  .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  textarea, input[type=text] {
+    flex: 1; font: inherit; padding: 10px 13px; border-radius: 9px; min-width: 200px;
+    border: 1px solid var(--line); background: var(--bg); color: inherit;
+  }
+  textarea { resize: none; line-height: 1.6; }
+  textarea:focus, input:focus { outline: none; border-color: var(--blue); background: #fff; }
+  button { font: inherit; cursor: pointer; border-radius: 9px; padding: 10px 18px; border: 1px solid var(--line); background: #fff; color: var(--text); }
+  button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .samples { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .samples button { font-size: 13px; color: var(--muted); padding: 5px 13px; border-radius: 999px; }
+  .samples button:hover { border-color: #b9b7ae; color: var(--text); }
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 12px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  canvas { width: 100%; border-radius: 8px; border: 1px solid var(--line); background: #222; display: block; }
+  .answer { font-size: 15.5px; line-height: 1.85; white-space: pre-wrap; }
+  .timing { color: var(--muted); font-size: 12.5px; margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 12.5px; padding: 2px 9px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+  .chip b { font-weight: 600; }
+  .warn { background: var(--amber-bg); border: 1px solid #f0dcb0; color: var(--amber); border-radius: 8px; padding: 9px 13px; font-size: 13.5px; margin-bottom: 12px; }
+  h2 { font-size: 13.5px; font-weight: 600; margin: 0 0 10px; color: var(--muted); }
+  .empty { color: var(--muted); font-size: 13.5px; text-align: center; padding: 30px 0; }
+  .fileline { font-size: 13px; color: var(--muted); }
+  input[type=file] { font: inherit; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>遥感图像问答<small>模型数完，把框给你自己看</small></h1>
+    <span style="font-size:13px;color:var(--muted)"><a href="http://127.0.0.1:8000/">← 回课程问答</a></span>
+  </header>
+  <div class="sub" id="status">检查模型状态…</div>
+
+  <div class="card">
+    <h2>1. 选一张图</h2>
+    <div class="row">
+      <input type="file" id="file" accept="image/*">
+      <span class="fileline">或者用数据集里的图：</span>
+      <input type="text" id="imgid" style="max-width:300px" placeholder="0000280_03401_d_0000629">
+      <button id="btnDetect">只看检测框</button>
+    </div>
+    <div class="warn" style="margin:12px 0 0">
+      仅适用于无人机／俯拍视角的图像。模型只认识 VisDrone 的 10 类：
+      行人、人群、自行车、汽车、面包车、卡车、三轮车、遮阳三轮、公交、摩托。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. 提问</h2>
+    <div class="row">
+      <textarea id="q" rows="2" placeholder="比如：这张图里有多少辆车"></textarea>
+      <button class="primary" id="btnAsk">提问</button>
+    </div>
+    <div class="samples">
+      <button>这张图里有多少辆车</button>
+      <button>图里有多少人</button>
+      <button>车主要停在哪一片</button>
+      <button>这张图里都有什么</button>
+      <button>车和摩托车各有多少</button>
+      <button>图里有船吗</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card" style="margin:0">
+      <h2>检测结果</h2>
+      <canvas id="cv" width="800" height="450"></canvas>
+      <div class="chips" id="counts" style="margin-top:10px"></div>
+    </div>
+    <div class="card" style="margin:0">
+      <h2>回答</h2>
+      <div id="ans"><div class="empty">问一句试试</div></div>
+      <div class="timing" id="timing"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const COLORS = {
+  car: '#e0453b', motor: '#f08c00', pedestrian: '#2f9e44', people: '#51cf66',
+  van: '#7048e8', truck: '#c2255c', tricycle: '#0c8599',
+  'awning-tricycle': '#1098ad', bus: '#1864ab', bicycle: '#a61e4d'
+};
+let ready = false, imgW = 800, imgH = 450, hasImg = false;
+
+async function check() {
+  try {
+    const r = await fetch('/status');
+    const d = await r.json();
+    ready = d.ready;
+    $('#status').textContent = ready
+      ? '模型就绪 · 检测 109ms（imgsz=1280），问答约 2~3 秒'
+      : '模型加载中（约 20 秒，第一次启动才有）…';
+    if (!ready) setTimeout(check, 2000);
+  } catch (e) {
+    $('#status').textContent = '服务未连接：' + e.message;
+    setTimeout(check, 3000);
+  }
+}
+
+function draw(boxes, w, h) {
+  imgW = w; imgH = h;
+  cv.width = w; cv.height = h;
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, 0, w, h);
+  if (hasImg) {
+    // 图已经画上去了，这里只叠框
+  }
+  const lw = Math.max(1.5, w / 700);
+  ctx.lineWidth = lw;
+  ctx.font = `${Math.max(10, w / 90)}px system-ui`;
+  boxes.forEach(b => {
+    const c = COLORS[b.cls] || '#ddd';
+    ctx.strokeStyle = c;
+    ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1);
+    const t = b.cls;
+    const tw = ctx.measureText(t).width;
+    ctx.fillStyle = c;
+    ctx.fillRect(b.x1, Math.max(0, b.y1 - 13), tw + 4, 13);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(t, b.x1 + 2, Math.max(10, b.y1 - 3));
+  });
+}
+
+function paintImage(fileOrUrl) {
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => {
+      imgW = im.naturalWidth; imgH = im.naturalHeight;
+      cv.width = imgW; cv.height = imgH;
+      ctx.drawImage(im, 0, 0);
+      hasImg = true;
+      res(im);
+    };
+    im.onerror = () => res(null);
+    im.src = fileOrUrl;
+  });
+}
+
+function chips(counts) {
+  const box = $('#counts');
+  box.innerHTML = '';
+  Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([k, v]) => {
+      const s = document.createElement('span');
+      s.className = 'chip';
+      s.innerHTML = `<b>${v}</b> ${k}`;
+      box.appendChild(s);
+    });
+}
+
+async function detectOnly() {
+  const f = $('#file').files[0];
+  const id = $('#imgid').value.trim();
+  if (!f && !id) { alert('先选一张图，或者填一个数据集里的图片名'); return; }
+  if (!ready) { alert('模型还在加载，稍等'); return; }
+
+  const fd = new FormData();
+  if (f) fd.append('file', f);
+  else fd.append('image_id', id);
+  $('#btnDetect').disabled = true;
+
+  try {
+    if (f) await paintImage(URL.createObjectURL(f));
+    const r = await fetch('/detect', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    if (!f) {
+      // 数据集里的图：用 canvas 画个浅底，框照样能对上位置
+      cv.width = d.w; cv.height = d.h;
+      ctx.fillStyle = '#333'; ctx.fillRect(0, 0, d.w, d.h);
+      hasImg = false;
+    }
+    draw(d.boxes, d.w, d.h);
+    chips(d.counts);
+    $('#timing').textContent = `检测 ${d.detect_ms}ms · ${d.boxes.length} 个框`;
+  } catch (e) {
+    alert('出错：' + e.message);
+  } finally {
+    $('#btnDetect').disabled = false;
+  }
+}
+
+async function ask() {
+  const q = $('#q').value.trim();
+  if (!q) return;
+  const f = $('#file').files[0];
+  const id = $('#imgid').value.trim();
+  if (!f && !id) { alert('先选一张图，或者填一个数据集里的图片名'); return; }
+  if (!ready) { alert('模型还在加载，稍等'); return; }
+
+  const fd = new FormData();
+  fd.append('question', q);
+  if (f) fd.append('file', f);
+  else fd.append('image_id', id);
+  $('#btnAsk').disabled = true;
+  $('#ans').innerHTML = '<div class="empty">检测中…</div>';
+
+  try {
+    if (f) await paintImage(URL.createObjectURL(f));
+    const r = await fetch('/ask', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+
+    if (!f) {
+      cv.width = d.w; cv.height = d.h;
+      ctx.fillStyle = '#333'; ctx.fillRect(0, 0, d.w, d.h);
+      hasImg = false;
+    }
+    draw(d.boxes, d.w, d.h);
+    chips(d.counts);
+
+    const a = document.createElement('div');
+    a.className = 'answer';
+    a.textContent = d.answer;
+    $('#ans').innerHTML = '';
+    $('#ans').appendChild(a);
+
+    const calls = d.calls.map(c => c.tool).join(' → ') || '（未调工具）';
+    $('#timing').textContent = `调用 ${calls} · 检测 ${d.detect_ms}ms · 合计 ${(d.total_ms / 1000).toFixed(1)}s`;
+  } catch (e) {
+    $('#ans').innerHTML = `<div class="warn">出错：${e.message}</div>`;
+  } finally {
+    $('#btnAsk').disabled = !ready;
+  }
+}
+
+$('#btnDetect').onclick = detectOnly;
+$('#btnAsk').onclick = ask;
+$('#btnDetect').disabled = true;
+$('#btnAsk').disabled = true;
+$('#q').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); ask(); }
+});
+document.querySelectorAll('.samples button').forEach(b => {
+  b.onclick = () => { $('#q').value = b.textContent; ask(); };
+});
+setTimeout(() => { if (ready) { $('#btnDetect').disabled = false; $('#btnAsk').disabled = false; }
+                   else { const t = setInterval(() => { if (ready) { $('#btnDetect').disabled = false;
+                     $('#btnAsk').disabled = false; clearInterval(t); } }, 1000); } }, 100);
+check();
+</script>
+</body>
+</html>
