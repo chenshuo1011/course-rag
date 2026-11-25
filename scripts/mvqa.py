@@ -69,6 +69,11 @@ ALIAS = {  # 中文说法 → 类别
 }
 KNOWN = set(RELIABILITY)        # 模型真正能识别的 10 类
 
+# VisDrone 把"行人"和"人群里的其他人"分成两类（pedestrian / people），
+# 中文里都是"人"，用户不会这么区分。问"有多少人"时必须两类一起数，
+# 否则会出现"图里没有行人"而画面里明明站着一堆人的回答。
+PEOPLE_GROUP = {"pedestrian", "people"}
+
 _model = None
 
 
@@ -132,12 +137,28 @@ class ImgTools:
                             f"「{cls}」不在其中，无法判断。"
                             f"回答里应说明识别范围，不能给数字。"}
         dets, _, _ = self._detect(image_id)
+
+        if cls_en in PEOPLE_GROUP:
+            # 两类一起数，同时给构成，回答可以说「共 8 人」
+            ped = sum(1 for d in dets if d["cls"] == "pedestrian")
+            ppl = sum(1 for d in dets if d["cls"] == "people")
+            n = ped + ppl
+            return {"图片": image_id, "类别": "人（行人+人群）", "检出数量": n,
+                    "构成": f"行人 {ped}、人群 {ppl}",
+                    "实测检出率": "行人 93%、人群 58%",
+                    "可靠度": "两类合计，人群那一类容易漏",
+                    "建议措辞": "至少" if n else "没有",
+                    "说明": "数据集把「行人」和「人群里的其他人」分成两类，这里合并统计；"
+                            "人群那一类实测只检出 58%，所以实际人数可能更多。"}
+
         n = sum(1 for d in dets if d["cls"] == cls_en)
         ratio, note = RELIABILITY.get(cls_en, (0.5, "未知"))
         return {"图片": image_id, "类别": cls_en, "检出数量": n,
                 "实测检出率": f"{ratio:.0%}", "可靠度": note,
-                "建议措辞": "可给确数" if ratio > 1.05 else
-                            ("约" if ratio > 0.8 else "至少"),
+                # 0 个时说"约 0 个"不是人话，直接说没有
+                "建议措辞": "没有" if n == 0 else
+                            ("可给确数" if ratio > 1.05 else
+                             ("约" if ratio > 0.8 else "至少")),
                 "说明": f"在这份数据集上，这类目标平均只能检出 {ratio:.0%}，"
                         f"所以真实数量可能{'更多' if ratio < 1 else '略少'}。"}
 
@@ -147,7 +168,8 @@ class ImgTools:
             return {"图片": image_id, "类别": cls_en, "检出数量": None,
                     "说明": f"「{cls}」不在模型的识别范围（只认 VisDrone 的 10 类）"}
         dets, _, _ = self._detect(image_id)
-        sub = [d for d in dets if d["cls"] == cls_en]
+        want = PEOPLE_GROUP if cls_en in PEOPLE_GROUP else {cls_en}
+        sub = [d for d in dets if d["cls"] in want]
         if not sub:
             return {"图片": image_id, "类别": cls_en, "检出数量": 0,
                     "说明": "没检出这类目标"}
@@ -190,7 +212,8 @@ SYSTEM = """你是遥感图像问答助手，可以调用工具看图。你**不
    工具返回「建议措辞：拒答」时，说明这一类不在识别范围内，
    要如实说「我只认 VisDrone 的那 10 类，看不出有没有X」，**不要给 0**。
 5. 一个问题里问两类目标，就分两步各调一次 count（一次只输出一个 JSON，不要一条消息里写两个动作），不要用 overview 代替。
-6. 数量是 0 时直接说「没有」，**不要写「大约 0 个」「至少 0 个」**，那不是人话。"""
+6. 数量是 0（或建议措辞是「没有」）时直接说「没有」，**不要写「大约 0 个」**，那不是人话。
+7. 问「人」时工具返回的是行人+人群的合并数，必要时可以说出构成。"""
 
 
 def build_system() -> str:
