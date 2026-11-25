@@ -35,6 +35,7 @@ BASE = Path(r"D:/visdrone/VisDrone2019-DET-val")
 WEIGHT = Path(r"D:/visdrone/yolov8n_visdrone.pt")
 IMGSZ = 1280
 CONF = 0.25
+SURE_CONF = 0.5   # 高于它才算"能确认"，低于它只说"可能"
 
 # 两套权重，按场景选。
 #
@@ -177,15 +178,21 @@ class ImgTools:
 
     def overview(self, image_id: str) -> dict:
         dets, w, h = self._detect(image_id)
-        c = Counter(d["cls"] for d in dets)
+        c = Counter(d["cls"] for d in dets if d["conf"] >= SURE_CONF)
+        lowc = Counter(d["cls"] for d in dets if d["conf"] < SURE_CONF)
         items = []
         for name, n in c.most_common():
             ratio, note = RELIABILITY.get(name, (0.5, "未知"))
-            items.append({"类别": name, "数量": n, "可靠度": note,
-                          "建议措辞": "可给确数" if ratio > 1.05 else
-                                     ("约" if ratio > 0.8 else "至少")})
+            it = {"类别": name, "数量": n, "可靠度": note,
+                  "建议措辞": "可给确数" if ratio > 1.05 else
+                             ("约" if ratio > 0.8 else "至少")}
+            if lowc.get(name):
+                it["不确定数量"] = lowc[name]
+            items.append(it)
         return {"图片": image_id, "尺寸": f"{w}x{h}", "各类数量": items,
-                "总计": len(dets)}
+                "总计": sum(c.values()),
+                "说明": "「数量」只统计置信度 0.5 以上的框；不确定数量是 0.25~0.5 的，"
+                        "可能是重复框或误检，回答时单独提，不要并入主数。"}
 
     def _canon(self, name: str) -> str:
         """把中文别名解析出的类别，按当前场景换成模型里的真实类名。"""
@@ -229,22 +236,33 @@ class ImgTools:
                     "说明": "数据集把「行人」和「人群里的其他人」分成两类，这里合并统计；"
                             "人群那一类实测只检出 58%，所以实际人数可能更多。"}
 
-        n = sum(1 for d in dets if d["cls"] == cls_en)
+        # 高置信 / 低置信分开数。
+        # 实测教训：一张街景图里"红绿灯 3 个"有 1 个是公交站牌被误判（conf 0.37），
+        # 车也有 0.26/0.28 的重复框。不分级就会给出"3 个红绿灯"这种半真半假的答案。
+        sure = [d for d in dets if d["cls"] == cls_en and d["conf"] >= SURE_CONF]
+        maybe = [d for d in dets if d["cls"] == cls_en and d["conf"] < SURE_CONF]
+        n, m = len(sure), len(maybe)
         if not self.calibrated:
             return {"图片": image_id, "类别": cls_en, "检出数量": n,
+                    "不确定数量": m,
                     "建议措辞": "没有" if n == 0 else "检出",
                     "说明": "这是上传的图，没有人工标注可对照，所以精度未知。"
                             "措辞用「模型检出 N 个」，不要说「至少」或「约」——"
-                            "那需要实测依据，这里没有。"}
+                            "那需要实测依据，这里没有。"
+                            + (f"另有 {m} 个低置信度框，回答里可提「还有 {m} 个不确定」，"
+                               f"但不能并入主数。" if m else "")}
         ratio, note = RELIABILITY.get(cls_en, (0.5, "未知"))
         return {"图片": image_id, "类别": cls_en, "检出数量": n,
+                "不确定数量": m,
                 "实测检出率": f"{ratio:.0%}", "可靠度": note,
                 # 0 个时说"约 0 个"不是人话，直接说没有
                 "建议措辞": "没有" if n == 0 else
                             ("可给确数" if ratio > 1.05 else
                              ("约" if ratio > 0.8 else "至少")),
                 "说明": f"在这份数据集上，这类目标平均只能检出 {ratio:.0%}，"
-                        f"所以真实数量可能{'更多' if ratio < 1 else '略少'}。"}
+                        f"所以真实数量可能{'更多' if ratio < 1 else '略少'}。"
+                        + (f"另有 {m} 个低置信度框（conf<{SURE_CONF}），"
+                           f"可能是同一目标的重复框或误检，不要并入主数。" if m else "")}
 
     def locate(self, image_id: str, cls: str) -> dict:
         cls_en = self._canon(ALIAS.get(cls.strip(), cls.strip()))
@@ -268,7 +286,7 @@ class ImgTools:
 TOOLS = {
     "overview": {
         "desc": "看一眼这张图里都有什么，返回各类目标的数量。问「图里有什么」「都有哪些东西」用这个。",
-        "args": {"image_id": "图片名（文件名去掉 .jpg）"},
+        "args": {"image_id": "图片名，不带路径也不带 .jpg，原样照抄问题里给的"},
     },
     "count": {
         "desc": "数某个类别有多少个。问「有几辆车」「多少人」用这个。"
@@ -288,6 +306,7 @@ SYSTEM = """你是遥感图像问答助手，可以调用工具看图。你**不
 
 每步只输出一个 JSON 对象，不要别的内容。
 调用工具：{{"thought":"一句话理由","action":"工具名","args":{{...}}}}
+image_id 直接照抄用户消息里「图片：」后面的那一串，不要改、不要加路径、不要加 .jpg。
 给出回答：{{"thought":"够了","action":"final","answer":"口语回答，60 字内"}}
 
 规则：
@@ -301,7 +320,9 @@ SYSTEM = """你是遥感图像问答助手，可以调用工具看图。你**不
 5. 一个问题里问两类目标，就分两步各调一次 count（一次只输出一个 JSON，不要一条消息里写两个动作），不要用 overview 代替。
 6. 数量是 0（或建议措辞是「没有」）时直接说「没有」，**不要写「大约 0 个」**，那不是人话。
 7. 问「人」时工具返回的是行人+人群的合并数，必要时可以说出构成。
-8. 建议措辞是「检出」时，说明这张图没有标注对照，只能说「模型检出 N 个」，
+8. 工具返回里有「不确定数量」时，那是低置信度的框（<0.5），可能是重复或误检。
+   可以提一句「另有 N 个不确定」，**但绝不能加进主数**。
+9. 建议措辞是「检出」时，说明这张图没有标注对照，只能说「模型检出 N 个」，
    不要加「至少/约」，也不要说"这类目标检出率多少"——那是另一个数据集上的数字。"""
 
 
@@ -375,7 +396,7 @@ def run(question: str, image_id: str, max_steps: int = 6, verbose: bool = True,
                 # 提示词里写了这条，但实测模型会漏遵守（通用模式下仍说"至少 5 辆"），
                 # 所以这里加一道确定性的兜底：只删出现在数字前的限定词，
                 # 不碰"约束""大约何时"这类词。
-                ans = re.sub(r"(至少|大约|大概|约)\s*(?=\d)", "", ans)
+                ans = re.sub(r"(至少|大约|大概|约)\s*(?:有|能看到|能确认|能数出|共)?\s*(?=\d)", "", ans)
             return {"answer": ans, "calls": called, "steps": steps,
                     "image": image_id, "question": question}
 

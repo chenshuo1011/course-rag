@@ -169,14 +169,22 @@ function draw(boxes, w, h) {
   ctx.font = `${Math.max(10, w / 90)}px system-ui`;
   boxes.forEach(b => {
     const c = COLORS[b.cls] || '#ddd';
+    // 置信度低于 0.5 的框用虚线和半透明——它们可能是重复框或误检，
+    // 实测里"红绿灯 3 个"就有 1 个是站牌误判（conf 0.37）。
+    const low = b.conf < 0.5;
+    ctx.save();
+    ctx.globalAlpha = low ? 0.55 : 1;
+    ctx.setLineDash(low ? [5, 4] : []);
     ctx.strokeStyle = c;
     ctx.strokeRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1);
-    const t = b.cls;
+    ctx.setLineDash([]);
+    const t = low ? `${b.cls} ${b.conf.toFixed(2)}` : b.cls;
     const tw = ctx.measureText(t).width;
     ctx.fillStyle = c;
     ctx.fillRect(b.x1, Math.max(0, b.y1 - 13), tw + 4, 13);
     ctx.fillStyle = '#fff';
     ctx.fillText(t, b.x1 + 2, Math.max(10, b.y1 - 3));
+    ctx.restore();
   });
 }
 
@@ -195,7 +203,7 @@ function paintImage(fileOrUrl) {
   });
 }
 
-function chips(counts) {
+function chips(counts, low) {
   const box = $('#counts');
   box.innerHTML = '';
   Object.entries(counts)
@@ -203,9 +211,28 @@ function chips(counts) {
     .forEach(([k, v]) => {
       const s = document.createElement('span');
       s.className = 'chip';
-      s.innerHTML = `<b>${v}</b> ${k}`;
+      const extra = low && low[k] ? ` <span style="color:#8a5a00">+${low[k]}?</span>` : '';
+      s.innerHTML = `<b>${v}</b> ${k}${extra}`;
       box.appendChild(s);
     });
+  if (low && Object.keys(low).length) {
+    const n = document.createElement('span');
+    n.className = 'chip';
+    n.style.background = '#fdf3dd';
+    n.style.borderColor = '#f0dcb0';
+    n.textContent = '虚框 = 置信度<0.5，可能误检';
+    box.appendChild(n);
+  }
+}
+
+// 客户端按置信度分段统计（服务端返回的每个框都带 conf）
+function splitByConf(boxes) {
+  const sure = {}, low = {};
+  boxes.forEach(b => {
+    const t = b.conf >= 0.5 ? sure : low;
+    t[b.cls] = (t[b.cls] || 0) + 1;
+  });
+  return [sure, low];
 }
 
 async function detectOnly() {
@@ -228,8 +255,9 @@ async function detectOnly() {
     // 数据集图没有原图可显示（只示位置），上传图已经画上去了
     hasImg = !!f;
     draw(d.boxes, d.w, d.h);
-    chips(d.counts);
-    $('#timing').textContent = `检测 ${d.detect_ms}ms · ${d.boxes.length} 个框`;
+    const [su, lo] = splitByConf(d.boxes);
+    chips(su, lo);
+    $('#timing').textContent = `检测 ${d.detect_ms}ms · 确认 ${d.boxes.length - Object.values(lo).reduce((a,b)=>a+b,0)} 个 · 不确定 ${Object.values(lo).reduce((a,b)=>a+b,0)} 个`;
   } catch (e) {
     alert('出错：' + e.message);
   } finally {
@@ -261,7 +289,8 @@ async function ask() {
 
     hasImg = !!f;
     draw(d.boxes, d.w, d.h);
-    chips(d.counts);
+    const [su2, lo2] = splitByConf(d.boxes);
+    chips(su2, lo2);
 
     const a = document.createElement('div');
     a.className = 'answer';

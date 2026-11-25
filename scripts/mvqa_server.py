@@ -145,12 +145,12 @@ async def ask(question: str = Form(...),
             raise HTTPException(400, "这张图读不出来")
         # Agent 是按 image_id 从数据集目录找图的，这里把上传图落到临时目录，
         # 保持"同一套流程"，而不是为上传另写一条分支
-        up = mvqa.BASE / "images" / "_upload"
-        up.mkdir(exist_ok=True)
+        # 直接落在 images/ 下，名字带 up_ 前缀区分。
+        # 之前放在 images/_upload/ 下、传 "_upload/up_xxx"，模型会把它当路径，
+        # 只传 basename 过来，然后报"没有这张图"。
         name = f"up_{int(time.time()*1000)}"
-        cv2.imwrite(str(up / f"{name}.jpg"), img)
-        target_id = f"_upload/{name}"
-        # mvqa 里拼的是 images/{id}.jpg，所以这里传子路径即可
+        cv2.imwrite(str(mvqa.BASE / "images" / f"{name}.jpg"), img)
+        target_id = name
         box_id = target_id
     else:
         if not image_id:
