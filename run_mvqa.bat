@@ -1,12 +1,12 @@
 @echo off
-chcp 65001 >nul
-cd /d "%~dp0scripts"
+cd /d "%~dp0mvqa"
 set KMP_DUPLICATE_LIB_OK=TRUE
-echo 遥感图像问答服务
-echo 打开 http://127.0.0.1:8001
-echo 首次启动加载检测模型约 20 秒，页面会显示加载状态
-echo 关闭这个窗口即停止服务。
-echo.
 set PYTHONIOENCODING=utf-8
+echo.
+echo   Remote-sensing image QA service
+echo   Open: http://127.0.0.1:8001
+echo   First start loads the detector, about 20 seconds.
+echo   Close this window to stop.
+echo.
 "D://anaconda3//envs//yolo//python.exe" -m uvicorn mvqa_server:app --host 127.0.0.1 --port 8001
 pause

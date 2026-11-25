@@ -29,6 +29,10 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
+# 两个模块共用的模型封装（scripts/llm.py）不在本目录，
+# 把它所在目录加进 sys.path，避免复制一份出来各改各的。
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
 import llm
 
 BASE = Path(r"D:/visdrone/VisDrone2019-DET-val")
