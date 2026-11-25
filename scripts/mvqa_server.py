@@ -21,6 +21,7 @@
 
 import io
 import threading
+import uuid
 import time
 from pathlib import Path
 
@@ -28,7 +29,6 @@ import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, Field
 from ultralytics import YOLO
 
 import mvqa
@@ -44,6 +44,24 @@ _ready = threading.Event()
 _sem = threading.Semaphore(2)
 
 MAX_BOXES = 200
+MAX_UPLOADS = 50        # 上传图最多留这么多个，多了删最旧的（原来永不清理，会一直涨）
+MAX_QUESTION = 500
+
+
+def check_scene(scene: str) -> str:
+    """非法场景名在入口就挡掉。原来直接 SCENES[scene] 会 KeyError → 500。"""
+    if scene not in mvqa.SCENES:
+        raise HTTPException(400, f"没有 {scene} 这个场景，可选：{'、'.join(mvqa.SCENES)}")
+    return scene
+
+
+def prune_uploads():
+    ups = sorted((mvqa.BASE / "images").glob("up_*.jpg"), key=lambda p: p.stat().st_mtime)
+    for p in ups[:-MAX_UPLOADS]:
+        try:
+            p.unlink()
+        except OSError:
+            pass
 
 
 def get_model(scene: str = "aerial") -> YOLO:
@@ -71,15 +89,19 @@ def detect_array(img: np.ndarray, scene: str = "aerial") -> list[dict]:
         out.append({"cls": m.names[int(c)], "conf": round(float(s), 3),
                     "x1": round(b[0]), "y1": round(b[1]),
                     "x2": round(b[2]), "y2": round(b[3])})
+    # 注意：这里返回**全量**。计数必须用全量算，
+    # 之前先截断到 200 再数，密集场景会把数量封顶在 200。
     out.sort(key=lambda d: -d["conf"])
-    return out[:MAX_BOXES]
+    return out
 
 
 @app.on_event("startup")
 def _warm():
     # 只预热航拍那套（默认场景）。通用那套等用户第一次选"日常"再加载，
     # 免得每次启动都多等一次。
-    threading.Thread(target=get_model, args=("aerial",), daemon=True).start()
+    pruning = threading.Thread(target=lambda: (prune_uploads(), get_model("aerial")),
+                               daemon=True)
+    pruning.start()
 
 
 @app.get("/status")
@@ -92,17 +114,16 @@ def page():
     return (HERE / "mvqa.html").read_text(encoding="utf-8")
 
 
-class AskIn(BaseModel):
-    image_id: str = Field("", description="数据集里的图片名（不含 .jpg）")
-    question: str = Field(..., min_length=1, max_length=100)
-
-
 @app.post("/detect")
 async def detect(file: UploadFile | None = File(None),
                  image_id: str = Form(""),
                  scene: str = Form("aerial")):
     """只跑检测。前端"只看框"用，也方便单独验证模型。"""
+    check_scene(scene)
+    if file is not None and image_id:
+        raise HTTPException(400, "上传图和 image_id 只能给一个")
     with _sem:
+        t_det0 = time.perf_counter()
         if file is not None:
             data = await file.read()
             arr = np.frombuffer(data, np.uint8)
@@ -119,10 +140,10 @@ async def detect(file: UploadFile | None = File(None),
         else:
             raise HTTPException(400, "要么传图，要么给 image_id")
 
-        t0 = time.perf_counter()
-        boxes = detect_array(img, scene)
-        ms = round((time.perf_counter() - t0) * 1000)
+        boxes_all = detect_array(img, scene)
+        ms = round((time.perf_counter() - t_det0) * 1000)
 
+    boxes = boxes_all[:MAX_BOXES]
     h, w = img.shape[:2]
     counts = {}
     for b in boxes:
@@ -137,6 +158,11 @@ async def ask(question: str = Form(...),
               image_id: str = Form(""),
               scene: str = Form("aerial")):
     """提问。上传图会先存到临时目录，再走和命令行完全相同的 Agent 流程。"""
+    check_scene(scene)
+    if file is not None and image_id:
+        raise HTTPException(400, "上传图和 image_id 只能给一个")
+    if len(question) > MAX_QUESTION:
+        raise HTTPException(400, f"问题太长了（{len(question)} 字），控制在 {MAX_QUESTION} 字内")
     if file is not None:
         data = await file.read()
         arr = np.frombuffer(data, np.uint8)
@@ -148,8 +174,10 @@ async def ask(question: str = Form(...),
         # 直接落在 images/ 下，名字带 up_ 前缀区分。
         # 之前放在 images/_upload/ 下、传 "_upload/up_xxx"，模型会把它当路径，
         # 只传 basename 过来，然后报"没有这张图"。
-        name = f"up_{int(time.time()*1000)}"
+        # 用 uuid 而不是毫秒时间戳：同一毫秒内的两个请求会互相覆盖
+        name = f"up_{uuid.uuid4().hex[:12]}"
         cv2.imwrite(str(mvqa.BASE / "images" / f"{name}.jpg"), img)
+        prune_uploads()
         target_id = name
         box_id = target_id
     else:
@@ -162,9 +190,13 @@ async def ask(question: str = Form(...),
 
     t0 = time.perf_counter()
     with _sem:
+        # 计时从拿到信号量之后开始，排队时间不该算进"检测耗时"
+        t_det0 = time.perf_counter()
         det_img = cv2.imread(str(mvqa.BASE / "images" / f"{box_id}.jpg"))
-        boxes = detect_array(det_img, scene)
-        det_ms = round((time.perf_counter() - t0) * 1000)
+        if det_img is None:
+            raise HTTPException(500, f"图片文件读不出来：{box_id}")
+        boxes_all = detect_array(det_img, scene)
+        det_ms = round((time.perf_counter() - t_det0) * 1000)
 
     try:
         # 通用模式没有实测依据（我们只在 VisDrone 上量过），一律按"未标定"措辞
@@ -175,11 +207,12 @@ async def ask(question: str = Form(...),
         raise HTTPException(500, f"问答失败：{type(e).__name__}: {e}")
 
     counts = {}
-    for b in boxes:
+    for b in boxes_all:                     # 计数用全量，别用截断后的
         counts[b["cls"]] = counts.get(b["cls"], 0) + 1
     h, w = det_img.shape[:2]
     return {"answer": r["answer"], "calls": r["calls"],
-            "boxes": boxes[:MAX_BOXES], "counts": counts,
+            "boxes": boxes_all[:MAX_BOXES], "counts": counts,
+            "boxes_total": len(boxes_all),
             "w": w, "h": h, "detect_ms": det_ms,
             "total_ms": round((time.perf_counter() - t0) * 1000),
             "source": "upload" if file is not None else "dataset"}
