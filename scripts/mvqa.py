@@ -85,8 +85,39 @@ ALIAS = {  # 中文说法 → 类别
     # 而不是当成"数量为 0 的目标"给个数字。
     "船": "boat", "帆船": "boat", "轮船": "boat", "舰船": "boat",
     "火车": "train", "列车": "train", "飞机": "airplane",
+    # 以下只在"日常模式"（COCO 80 类）下有效。
+    # 航拍模式下这些类不在 KNOWN 里，会正确拒答"只识别 10 类"。
+    # 原来只覆盖了 7 个 COCO 类，导致问"狗""红绿灯"被拒答——模型其实认识。
+    "狗": "dog", "小狗": "dog", "猫": "cat", "小猫": "cat", "鸟": "bird",
+    "马": "horse", "羊": "sheep", "牛": "cow", "大象": "elephant", "熊": "bear",
+    "斑马": "zebra", "长颈鹿": "giraffe",
+    "红绿灯": "traffic light", "信号灯": "traffic light",
+    "消防栓": "fire hydrant", "停车标志": "stop sign", "限速牌": "stop sign",
+    "长椅": "bench", "长凳": "bench", "椅子": "chair", "沙发": "couch",
+    "背包": "backpack", "雨伞": "umbrella", "伞": "umbrella", "手提包": "handbag",
+    "行李箱": "suitcase", "瓶子": "bottle", "杯子": "cup", "碗": "bowl",
+    "书": "book", "手机": "cell phone", "笔记本电脑": "laptop", "键盘": "keyboard",
+    "鼠标": "mouse", "电视": "tv", "显示器": "tv", "床": "bed",
+    "餐桌": "dining table", "桌子": "dining table", "马桶": "toilet",
+    "冰箱": "refrigerator", "微波炉": "microwave", "水槽": "sink",
+    "香蕉": "banana", "苹果": "apple", "橙子": "orange", "披萨": "pizza",
+    "蛋糕": "cake", "三明治": "sandwich", "剪刀": "scissors", "风筝": "kite",
+    "球": "sports ball", "滑板": "skateboard", "冲浪板": "surfboard",
+    "棒球棍": "baseball bat", "网球拍": "tennis racket", "滑雪板": "skis",
+    # 模型不认识这些（COCO 里也没有），保留是为了能说"不在识别范围"
+    "自行车架": "bike rack",
+    # 补齐剩下的 COCO 类，让 80 类全部能用中文问到
+    "棒球手套": "baseball glove", "西兰花": "broccoli", "胡萝卜": "carrot",
+    "钟": "clock", "时钟": "clock", "表": "clock", "甜甜圈": "donut",
+    "叉子": "fork", "飞盘": "frisbee", "吹风机": "hair drier",
+    "热狗": "hot dog", "刀": "knife", "烤箱": "oven",
+    "停车计时器": "parking meter", "盆栽": "potted plant", "绿植": "potted plant",
+    "遥控器": "remote", "滑雪单板": "snowboard", "勺子": "spoon",
+    "泰迪熊": "teddy bear", "玩具熊": "teddy bear", "领带": "tie",
+    "烤面包机": "toaster", "牙刷": "toothbrush", "花瓶": "vase",
+    "酒杯": "wine glass", "红酒杯": "wine glass",
 }
-KNOWN = set(RELIABILITY)        # 模型真正能识别的 10 类
+KNOWN = set(RELIABILITY)        # 航拍模式下能识别的 10 类
 
 # VisDrone 把"行人"和"人群里的其他人"分成两类（pedestrian / people），
 # 中文里都是"人"，用户不会这么区分。问"有多少人"时必须两类一起数，
