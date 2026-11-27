@@ -27,39 +27,30 @@
 import re
 
 import mvqa
+from eval_common import pick_images
 
-DENSE = "0000280_03401_d_0000629"     # 车 51、人 8、摩托 10
-CYCLE = "0000001_03999_d_0000007"     # 自行车 3
-TRI = "0000001_07999_d_0000012"       # 三轮 2
-TRUCK = "0000076_02142_d_0000009"     # 卡车 4
+# 类别轮换：每张图问"车"（可给确数）+ 一个轮换类别（多半落在"至少"或"没有"）
+ROTATE = ["摩托", "自行车", "卡车", "公交", "面包车", "三轮车", "行人"]
 
-# (图片, 类别, 场景, 是否已标定, 备注)
-CASES = [
-    # A 组：航拍 + 已标定，覆盖高/中/低召回
-    (DENSE, "车", "aerial", True, "检出 113%"),
-    (DENSE, "行人", "aerial", True, "检出 93%"),
-    (DENSE, "摩托", "aerial", True, "检出 80%"),
-    (DENSE, "面包车", "aerial", True, "检出 69%"),
-    (DENSE, "公交", "aerial", True, "检出 67%"),
-    (DENSE, "卡车", "aerial", True, "检出 59%"),
-    (DENSE, "人", "aerial", True, "两类合并"),
-    (TRI, "行人", "aerial", True, "合并后 47 个，大数字"),
-    (CYCLE, "自行车", "aerial", True, "检出 48%"),
-    (TRI, "三轮车", "aerial", True, "检出 67%"),
-    (TRUCK, "卡车", "aerial", True, "检出 59%"),
-    (CYCLE, "卡车", "aerial", True, "可能为 0"),
-    (TRUCK, "自行车", "aerial", True, "可能为 0"),
-    # B 组：通用模式 / 未标定，不能说"至少"
-    (DENSE, "车", "general", False, "未标定"),
-    (CYCLE, "车", "general", False, "未标定"),
-    (TRUCK, "人", "general", False, "未标定"),
-    (TRI, "摩托", "general", False, "未标定"),
-    (DENSE, "卡车", "general", False, "未标定"),
-    # C 组：不在标签空间，必须拒答
-    (DENSE, "帆船", "aerial", True, "不在 10 类"),
-    (DENSE, "火车", "general", False, "COCO 有 train，应能答"),
-    (CYCLE, "飞机", "aerial", True, "不在 10 类"),
-]
+
+def build_cases():
+    """20 张图 × 2 类 = 40 条已标定；加 6 条通用模式、3 条拒答。"""
+    picks = pick_images(20)
+    cases = []
+    for i, (stem, _) in enumerate(picks):
+        cases.append((stem, "车", "aerial", True, "检出 113%"))
+        cases.append((stem, ROTATE[i % len(ROTATE)], "aerial", True, "轮换类别"))
+    # 通用模式：未标定，一律不能说"至少/约"
+    for i, (stem, _) in enumerate(picks[:6]):
+        cases.append((stem, "车" if i % 2 == 0 else "人", "general", False, "未标定"))
+    # 不在标签空间
+    cases.append((picks[0][0], "帆船", "aerial", True, "不在 10 类"))
+    cases.append((picks[1][0], "飞机", "aerial", True, "不在 10 类"))
+    cases.append((picks[2][0], "火车", "general", False, "COCO 有 train"))
+    return cases
+
+
+CASES = build_cases()
 
 HEDGE_APPROX = ("约", "大约", "大概", "左右")
 HEDGE_LOWER = ("至少", "可能", "以上", "不止")
