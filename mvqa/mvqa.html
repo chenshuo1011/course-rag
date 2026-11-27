@@ -109,6 +109,7 @@
       <h2>回答</h2>
       <div id="ans"><div class="empty">问一句试试</div></div>
       <div class="timing" id="timing"></div>
+      <div id="hist" style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px"></div>
     </div>
   </div>
 </div>
@@ -122,6 +123,9 @@ const COLORS = {
   'awning-tricycle': '#1098ad', bus: '#1864ab', bicycle: '#a61e4d'
 };
 let ready = false, imgW = 800, imgH = 450, hasImg = false;
+// 对话历史只存在前端，服务端无状态。换图/换场景就清空——
+// 上一张图的数字带进新图上下文里只会误导。
+let conv = [], curImg = '';
 
 function scene() {
   return document.querySelector('input[name=scene]:checked').value;
@@ -131,6 +135,7 @@ function scene() {
 // 航拍权重检出 2 个、通用权重检出 10 个）
 document.querySelectorAll('input[name=scene]').forEach(r => {
   r.onchange = () => {
+    conv = []; renderHistory();
     const s = scene();
     $('#scope').textContent = s === 'aerial'
       ? '航拍模式：认 VisDrone 的 10 类（行人、人群、自行车、汽车、面包车、卡车、三轮车、遮阳三轮、公交、摩托）。目标要小、视角接近垂直俯视。'
@@ -330,9 +335,11 @@ async function ask() {
   const id = $('#imgid').value.trim();
   if (!f && !id) { alert('先选一张图，或者填一个数据集里的图片名'); return; }
   if (!ready) { alert('模型还在加载，稍等'); return; }
+  resetConvIfNewImage(f ? `up:${f.name}:${f.size}` : `ds:${id}`);
 
   const fd = new FormData();
   fd.append('question', q);
+  if (conv.length) fd.append('history', JSON.stringify(conv.slice(-3)));
   if (f) fd.append('file', f);
   else fd.append('image_id', id);
   fd.append('scene', scene());
@@ -360,11 +367,19 @@ async function ask() {
       document.querySelector('#counts').appendChild(hint);
     }
 
+    conv.push({ q, a: d.answer });
     const a = document.createElement('div');
     a.className = 'answer';
     a.textContent = d.answer;
     $('#ans').innerHTML = '';
+    if (conv.length > 1) {
+      const h = document.createElement('div');
+      h.style.cssText = 'font-size:12.5px;color:#6b6a64;margin-bottom:8px';
+      h.textContent = `第 ${conv.length} 轮（前 ${Math.min(3, conv.length - 1)} 轮作为上下文）`;
+      $('#ans').appendChild(h);
+    }
     $('#ans').appendChild(a);
+    renderHistory();
 
     const calls = d.calls.map(c => c.tool).join(' → ') || '（未调工具）';
     $('#timing').textContent = `调用 ${calls} · 检测 ${d.detect_ms}ms · 合计 ${(d.total_ms / 1000).toFixed(1)}s`;
@@ -373,6 +388,30 @@ async function ask() {
   } finally {
     $('#btnAsk').disabled = !ready;
   }
+}
+
+// 换图就清空对话：不同图片的计数不可比
+function resetConvIfNewImage(key) {
+  if (curImg && key && key !== curImg) { conv = []; renderHistory(); }
+  if (key) curImg = key;
+}
+
+function renderHistory() {
+  const box = $('#hist');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!conv.length) return;
+  conv.forEach((h, i) => {
+    const d = document.createElement('div');
+    d.style.cssText = 'font-size:12.5px;color:#6b6a64;margin-top:4px';
+    d.textContent = `${i + 1}. ${h.q} → ${h.a.slice(0, 46)}${h.a.length > 46 ? '…' : ''}`;
+    box.appendChild(d);
+  });
+  const clr = document.createElement('button');
+  clr.textContent = '清空对话';
+  clr.style.cssText = 'margin-top:8px;font-size:12px;padding:3px 10px';
+  clr.onclick = () => { conv = []; renderHistory(); $('#ans').innerHTML = '<div class="empty">已清空</div>'; };
+  box.appendChild(clr);
 }
 
 $('#btnDetect').onclick = detectOnly;

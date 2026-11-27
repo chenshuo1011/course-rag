@@ -427,7 +427,10 @@ image_id 直接照抄用户消息里「图片：」后面的那一串，不要�
 8. 工具返回里有「不确定数量」时，那是低置信度的框（<0.5），可能是重复或误检。
    可以提一句「另有 N 个不确定」，**但绝不能加进主数**。
 9. 建议措辞是「检出」时，说明这张图没有标注对照，只能说「模型检出 N 个」，
-   不要加「至少/约」，也不要说"这类目标检出率多少"——那是另一个数据集上的数字。"""
+   不要加「至少/约」，也不要说"这类目标检出率多少"——那是另一个数据集上的数字。
+10. 对话历史里是之前几轮说过的话，追问可以引用其中的数字和结论
+    （「比刚才多了吗」「那左边呢」）。但**历史里没提过的信息不许编**，
+    可以直说「上文没提这个」。"""
 
 
 def build_system(scene: str = "aerial") -> str:
@@ -479,10 +482,27 @@ def parse_action(text: str) -> dict:
 
 
 def run(question: str, image_id: str, max_steps: int = 6, verbose: bool = True,
-        calibrated: bool = True, scene: str = "aerial") -> dict:
+        calibrated: bool = True, scene: str = "aerial",
+        history: list[dict] | None = None) -> dict:
+    """history: [{"q": 上一轮问题, "a": 上一轮回答}, ...]，最多取最近 3 轮。
+
+    不存会话，由前端把最近几轮带上来——服务端仍然无状态。
+    这样「比刚才多了还是少了」「那左边呢」能接上，而不必引入 session 管理。
+    """
     tools = ImgTools(calibrated=calibrated, scene=scene)
-    messages = [{"role": "system", "content": build_system(scene)},
-                {"role": "user", "content": f"图片：{image_id}\n问题：{question}"}]
+    messages = [{"role": "system", "content": build_system(scene)}]
+
+    # 把历史按协议格式回放：user 提问 → assistant 的 final 动作。
+    # 这样模型看到的对话形状和它自己产出的形状一致，不用另教一套。
+    for h in (history or [])[-3:]:
+        q0, a0 = (h.get("q") or "").strip(), (h.get("a") or "").strip()
+        if not q0 or not a0:
+            continue
+        messages.append({"role": "user", "content": f"图片：{image_id}\n问题：{q0}"})
+        messages.append({"role": "assistant", "content": json.dumps(
+            {"thought": "已答", "action": "final", "answer": a0}, ensure_ascii=False)})
+
+    messages.append({"role": "user", "content": f"图片：{image_id}\n问题：{question}"})
     called, steps = [], []
 
     for _ in range(max_steps):

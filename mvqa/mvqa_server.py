@@ -20,6 +20,7 @@
 """
 
 import io
+import json
 import threading
 import uuid
 import time
@@ -156,13 +157,26 @@ async def detect(file: UploadFile | None = File(None),
 async def ask(question: str = Form(...),
               file: UploadFile | None = File(None),
               image_id: str = Form(""),
-              scene: str = Form("aerial")):
+              scene: str = Form("aerial"),
+              history: str = Form("")):
     """提问。上传图会先存到临时目录，再走和命令行完全相同的 Agent 流程。"""
     check_scene(scene)
     if file is not None and image_id:
         raise HTTPException(400, "上传图和 image_id 只能给一个")
     if len(question) > MAX_QUESTION:
         raise HTTPException(400, f"问题太长了（{len(question)} 字），控制在 {MAX_QUESTION} 字内")
+
+    # 历史由前端带上来，服务端仍无状态：不存 session，也不做清理。
+    # 只在内存里解析最近 3 轮，格式不对就当没有，不让脏数据打断问答。
+    hist = []
+    if history:
+        try:
+            raw = json.loads(history)
+            if isinstance(raw, list):
+                hist = [h for h in raw[-3:]
+                        if isinstance(h, dict) and h.get("q") and h.get("a")]
+        except json.JSONDecodeError:
+            hist = []
     if file is not None:
         data = await file.read()
         arr = np.frombuffer(data, np.uint8)
@@ -202,7 +216,7 @@ async def ask(question: str = Form(...),
         # 通用模式没有实测依据（我们只在 VisDrone 上量过），一律按"未标定"措辞
         r = mvqa.run(question, target_id, verbose=False,
                      calibrated=(file is None and scene == "aerial"),
-                     scene=scene)
+                     scene=scene, history=hist)
     except Exception as e:
         raise HTTPException(500, f"问答失败：{type(e).__name__}: {e}")
 
