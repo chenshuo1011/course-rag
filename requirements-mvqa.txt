@@ -18,6 +18,7 @@ pyarrow==26.0.1
 
 # 权重与数据不在仓库里，需要手动下载：
 #   模型：mshamrai/yolov8n-visdrone（约 6MB）→ D:/visdrone/yolov8n_visdrone.pt
-#         yolov8n.pt（COCO 通用，约 6MB）    → D:/visdrone/yolov8n_coco.pt
+#         yolov8m.pt（COCO 通用，约 50MB）   → D:/visdrone/yolov8m.pt   ← 日常模式用这个
+#         yolov8n.pt（可选，对比用，约 6MB）  → D:/visdrone/yolov8n_coco.pt
 #   数据：VisDrone2019-DET-val（约 78MB，含标注）
 #         https://github.com/ultralytics/assets/releases/download/v0.0.0/VisDrone2019-DET-val.zip

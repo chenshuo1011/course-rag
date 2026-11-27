@@ -51,7 +51,11 @@ SCENES = {
     "aerial": (Path(r"D:/visdrone/yolov8n_visdrone.pt"), IMGSZ,
                "航拍俯视：只认 VisDrone 的 10 类（行人、人群、自行车、汽车、"
                "面包车、卡车、三轮车、遮阳三轮、公交、摩托），目标通常很小"),
-    "general": (Path(r"D:/visdrone/yolov8n_coco.pt"), 960,
+    # 日常模式用 m 而不是 n：实测一张 4096x3072 的合影（真值 11 人），
+    # n@960 只检出 8 个、n@1280 检出 10 个、m@960 正好 11 个。
+    # 换 m 后延迟 74ms → 385ms，但在另外两张真实照片（夜景街景、桥面摩托）上
+    # 检出数完全一致，没有引入新问题。
+    "general": (Path(r"D:/visdrone/yolov8m.pt"), 960,
                 "日常场景：COCO 80 类（人、汽车、摩托、自行车、公交、卡车、"
                 "船、飞机、火车等），目标较大、视角倾斜"),
 }
