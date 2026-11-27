@@ -34,6 +34,16 @@ from ultralytics import YOLO
 
 import mvqa
 
+# 视觉模型是可选能力：模块缺失或没有 key 时只让 /describe 不可用，
+# 计数的 /ask、/detect 必须照常工作。
+try:
+    import llm_vision
+except Exception as _e:          # noqa: BLE001
+    llm_vision = None
+    _vlm_import_error = f"{type(_e).__name__}: {_e}"
+else:
+    _vlm_import_error = ""
+
 HERE = Path(__file__).parent
 app = FastAPI(title="遥感图像问答")
 
@@ -113,6 +123,51 @@ def status():
 @app.get("/", response_class=HTMLResponse)
 def page():
     return (HERE / "mvqa.html").read_text(encoding="utf-8")
+
+
+@app.post("/describe")
+async def describe(file: UploadFile | None = File(None),
+                   image_id: str = Form(""),
+                   question: str = Form("用一句话描述这张图的场景，不要数数")):
+    """场景描述（不参与计数评测）。
+
+    独立接口，不进 Agent 循环——这样 mvqa.py 的提示词一字不改，
+    90/49/10 三套评测的对象保持不变。
+    """
+    if llm_vision is None:
+        raise HTTPException(503, f"场景描述不可用：{_vlm_import_error or '模块未加载'}")
+    if not llm_vision.available():
+        raise HTTPException(503, "场景描述不可用：没有配置 VLM_API_KEY")
+
+    if file is not None and image_id:
+        raise HTTPException(400, "上传图和 image_id 只能给一个")
+    if file is not None:
+        data = await file.read()
+        img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+        if img is None:
+            raise HTTPException(400, "这张图读不出来")
+        tmp = mvqa.BASE / "images" / f"vlm_{uuid.uuid4().hex[:12]}.jpg"
+        cv2.imwrite(str(tmp), img)
+        path = tmp
+    elif image_id:
+        path = mvqa.BASE / "images" / f"{image_id}.jpg"
+        if not path.exists():
+            raise HTTPException(404, f"没有这张图：{image_id}")
+    else:
+        raise HTTPException(400, "要么传图，要么给 image_id")
+
+    try:
+        r = llm_vision.describe(path, question)
+    except Exception as e:                      # noqa: BLE001
+        raise HTTPException(502, f"视觉模型调用失败：{e}")
+    finally:
+        if file is not None:
+            try:
+                path.unlink()
+            except OSError:
+                pass
+
+    return {**r, "note": "场景描述由通用视觉模型生成，只作参考，不参与计数"}
 
 
 @app.post("/detect")

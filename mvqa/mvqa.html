@@ -99,6 +99,19 @@
     </div>
   </div>
 
+  <div class="card">
+    <h2>3. 场景描述（独立功能，不参与计数）</h2>
+    <div class="row">
+      <input type="text" id="descq" value="用一句话描述这张图的场景，不要数数">
+      <button id="btnDesc">描述</button>
+    </div>
+    <div class="warn" style="margin:10px 0 0">
+      这一段由通用视觉模型（GLM-4V）看图直接生成，<b>只作参考、无法核对</b>，
+      也不参与上面的计数评测。要数字请用「提问」——那条链路的每个数都有框和实测依据。
+    </div>
+    <div id="descOut" style="margin-top:10px"></div>
+  </div>
+
   <div class="grid">
     <div class="card" style="margin:0">
       <h2>检测结果</h2>
@@ -414,19 +427,58 @@ function renderHistory() {
   box.appendChild(clr);
 }
 
+async function describeScene() {
+  const f = $('#file').files[0];
+  const id = $('#imgid').value.trim();
+  if (!f && !id) { alert('先选一张图，或者填一个数据集里的图片名'); return; }
+  const fd = new FormData();
+  fd.append('question', $('#descq').value.trim() || '用一句话描述这张图的场景');
+  if (f) fd.append('file', f); else fd.append('image_id', id);
+
+  $('#btnDesc').disabled = true;
+  $('#descOut').innerHTML = '<div class="empty">正在看图…（约 2 秒）</div>';
+  try {
+    const r = await fetch('/describe', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    const box = document.createElement('div');
+    box.className = 'answer';
+    box.textContent = d.answer;
+    const meta = document.createElement('div');
+    meta.className = 'timing';
+    meta.textContent = `${d.model} · ${(d.ms / 1000).toFixed(1)}s · ${d.note}`;
+    $('#descOut').innerHTML = '';
+    $('#descOut').appendChild(box);
+    $('#descOut').appendChild(meta);
+  } catch (e) {
+    $('#descOut').innerHTML = `<div class="warn">${e.message}</div>`;
+  } finally {
+    $('#btnDesc').disabled = !ready;
+  }
+}
+
+$('#btnDesc').onclick = describeScene;
 $('#btnDetect').onclick = detectOnly;
 $('#btnAsk').onclick = ask;
 $('#btnDetect').disabled = true;
 $('#btnAsk').disabled = true;
+$('#btnDesc').disabled = true;
 $('#q').addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); ask(); }
 });
 document.querySelectorAll('.samples button').forEach(b => {
   b.onclick = () => { $('#q').value = b.textContent; ask(); };
 });
-setTimeout(() => { if (ready) { $('#btnDetect').disabled = false; $('#btnAsk').disabled = false; }
-                   else { const t = setInterval(() => { if (ready) { $('#btnDetect').disabled = false;
-                     $('#btnAsk').disabled = false; clearInterval(t); } }, 1000); } }, 100);
+function unlock() {
+  const on = ready;
+  $('#btnDetect').disabled = !on;
+  $('#btnAsk').disabled = !on;
+  $('#btnDesc').disabled = !on;
+}
+setTimeout(() => {
+  if (ready) unlock();
+  else { const t = setInterval(() => { if (ready) { unlock(); clearInterval(t); } }, 1000); }
+}, 100);
 check();
 </script>
 </body>
