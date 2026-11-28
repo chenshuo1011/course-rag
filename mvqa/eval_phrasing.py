@@ -43,6 +43,10 @@ def build_cases():
     # 通用模式：未标定，一律不能说"至少/约"
     for i, (stem, _) in enumerate(picks[:6]):
         cases.append((stem, "车" if i % 2 == 0 else "人", "general", False, "未标定"))
+    # 通用模式下"表外类别"——没有实测召回率，必须退回「检出」
+    for i, (stem, _) in enumerate(picks[:2]):
+        cases.append((stem, ("长椅", "花瓶")[i], "general", False, "表外类别"))
+
     # 不在标签空间
     cases.append((picks[0][0], "帆船", "aerial", True, "不在 10 类"))
     cases.append((picks[1][0], "飞机", "aerial", True, "不在 10 类"))
@@ -84,8 +88,11 @@ def check(kind: str, answer: str) -> tuple[bool, str]:
         ok = near_number(answer, HEDGE_APPROX)
         return ok, "应出现「约/大约/左右」" if not ok else ""
     if kind == "至少":
-        ok = near_number(answer, HEDGE_LOWER)
-        return ok, "应出现「至少/可能/以上」" if not ok else ""
+        # 两种写法都算合规：把限定词放在数字旁（「至少 4 个」），
+        # 或在后面补一句（「4 个……实际可能更多」）。语义一样，不该判错。
+        ok = near_number(answer, HEDGE_LOWER) or any(
+            w in answer for w in ("可能更多", "可能还有", "漏检", "偏少", "不只"))
+        return ok, "应说明实际可能更多（至少/可能更多/漏检）" if not ok else ""
     if kind == "检出":
         bad = near_number(answer, HEDGE_APPROX + ("至少",))
         return (not bad), "未标定不能说「约/至少」" if bad else ""

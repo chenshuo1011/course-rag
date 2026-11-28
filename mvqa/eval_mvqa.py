@@ -65,7 +65,11 @@ def main():
         used_cls = [str(c["args"].get("cls", "")) for c in r["calls"]]
         ans = r["answer"]
 
-        ok_tool = bool(set(used_tools) & want_tools) if want_tools else not used_tools
+        # 拒答题允许"不调工具直接拒"——那比先查一遍再说不知道更省也更诚实
+        refuse_early = (not used_tools) and kind == "不在标签空间"
+        ok_tool = (bool(set(used_tools) & want_tools) if want_tools else not used_tools)
+        if not ok_tool and refuse_early:
+            ok_tool = True
 
         ok_cls = True
         if want_cls:

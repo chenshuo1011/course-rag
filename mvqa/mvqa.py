@@ -126,6 +126,30 @@ ALIAS = {  # 中文说法 → 类别
     "烤面包机": "toaster", "牙刷": "toothbrush", "花瓶": "vase",
     "酒杯": "wine glass", "红酒杯": "wine glass",
 }
+# 通用模式（COCO）的实测召回率。
+#
+# 来源：COCO val2017 抽 60 张（1254 个标注框，剔除 iscrowd），yolov8m@960，
+# IoU 0.5 匹配，conf 0.5。模型训练时没见过这批图。
+#
+# 和航拍那张表的区别要记住：
+#   航拍表 = 548 张 VisDrone 上的实测，同分布，敢用
+#   通用表 = 60 张 val2017 上的实测，只对"和 COCO 像的日常照片"有参考意义
+#            （夜景、极端角度、大特写都可能不成立）
+# 所以措辞里要带来源，不能让用户以为这是对这张图量的。
+RELIABILITY_GENERAL = {
+    "person": (0.56, "一半左右"),
+    "car": (0.60, "六成"),
+    "bus": (0.75, "约四分之三"),
+    "motorcycle": (0.48, "不到一半"),
+    "truck": (0.45, "不到一半"),
+    "bicycle": (0.43, "不到一半"),
+    "umbrella": (0.40, "只有四成"),
+    "boat": (0.36, "只有三成多"),
+    "backpack": (0.26, "只有四分之一"),
+    "chair": (0.21, "只有两成，漏得很多"),
+    "handbag": (0.10, "只有一成，基本数不清"),
+}
+
 KNOWN = set(RELIABILITY)        # 航拍模式下能识别的 10 类
 
 # 方位词 → (列, 行)，None 表示该维度不限。
@@ -240,9 +264,17 @@ class ImgTools:
                 # 这一类只有低置信度框，很可能是误检，措辞必须区分开
                 it["可靠度"] = "全部为低置信度，可能是误检"
                 it["建议措辞"] = "可能"
+            elif self.scene == "general" and name in RELIABILITY_GENERAL:
+                # 通用模式也有实测依据了（COCO val2017 60 张），按它措辞
+                gr, gnote = RELIABILITY_GENERAL[name]
+                it["可靠度"] = f"COCO val2017 实测召回 {gr:.0%}，{gnote}"
+                it["建议措辞"] = ("可给确数" if gr > 1.05 else
+                                  ("约" if gr > 0.8 else "至少"))
+            elif self.scene == "general":
+                # 表外的类别没量过，不能声称精度
+                it["可靠度"] = "这一类没有实测依据"
+                it["建议措辞"] = "检出"
             elif not self.calibrated:
-                # 通用模式没有实测依据，不能说"至少/约"。
-                # 之前这里套用了航拍的检出率表，导致回答里出现"至少 2 个红绿灯"。
                 it["可靠度"] = "无实测依据"
                 it["建议措辞"] = "检出"
             else:
@@ -311,6 +343,33 @@ class ImgTools:
         sure = [d for d in dets if d["cls"] == cls_en and d["conf"] >= SURE_CONF]
         maybe = [d for d in dets if d["cls"] == cls_en and d["conf"] < SURE_CONF]
         n, m = len(sure), len(maybe)
+        # 通用模式：查 COCO val2017 的实测表。
+        # 放在 calibrated 判断之前，是因为这个依据是"数据集级"的——
+        # 不需要这张图的标注，只要图和 COCO 的分布大致像，召回率就有参考意义。
+        if self.scene == "general":
+            g = RELIABILITY_GENERAL.get(cls_en)
+            if g is None:
+                return {"图片": image_id, "类别": cls_en, "检出数量": n,
+                        "不确定数量": m,
+                        "建议措辞": "没有" if n == 0 else "检出",
+                        "说明": f"这一类没有实测依据（只量过 "
+                                f"{'、'.join(sorted(RELIABILITY_GENERAL))[:80]}… 等 "
+                                f"{len(RELIABILITY_GENERAL)} 类），"
+                                f"所以只能说「模型检出 N 个」，不能说「至少」。"}
+            gr, gnote = g
+            return {"图片": image_id, "类别": cls_en, "检出数量": n,
+                    "不确定数量": m,
+                    "实测检出率": f"{gr:.0%}（COCO val2017，60 张）",
+                    "可靠度": gnote,
+                    "建议措辞": "没有" if n == 0 else
+                                ("可给确数" if gr > 1.05 else
+                                 ("约" if gr > 0.8 else "至少")),
+                    "说明": f"这一类在 COCO val2017 上平均只能检出 {gr:.0%}"
+                            f"（{gnote}），所以真实数量可能明显更多。"
+                            f"注意这是数据集级统计，不是对这张图量的——"
+                            f"夜景、极端角度可能更差。"
+                            + (f"另有 {m} 个低置信度框，不要并入主数。" if m else "")}
+
         if not self.calibrated:
             return {"图片": image_id, "类别": cls_en, "检出数量": n,
                     "不确定数量": m,
@@ -447,8 +506,12 @@ def build_system(scene: str = "aerial") -> str:
     # 场景不同，能识别的类别和措辞依据都不同，必须写进提示词，
     # 否则通用模式下模型会继续套用 VisDrone 的检出率说法
     note = SCENES[scene][2]
-    measured = ("" if scene != "aerial" else
-                "这是航拍模式，可以用实测检出率来措辞（工具返回里会带）。")
+    if scene == "aerial":
+        measured = "这是航拍模式，可以用 VisDrone 实测检出率来措辞（工具返回里会带）。"
+    else:
+        measured = ("这是通用模式。对工具返回里带「实测检出率」的类别（人、车、公交等"
+                    f"{len(RELIABILITY_GENERAL)} 类，依据是 COCO val2017），"
+                    "可以按它说「至少/约」；表外的类别只能说「模型检出 N 个」。")
     return SYSTEM.format(tools="\n".join(lines)) + f"\n\n当前场景：{note}。{measured}"
 
 
